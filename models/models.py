@@ -44,6 +44,7 @@ class PerfilMayor(db.Model):
     recuerdos_especiales = db.Column(db.Text)
     nombre_mascota = db.Column(db.String(100))
     tipo_mascota = db.Column(db.String(100))
+    informacion_adicional = db.Column(db.Text)
     creado_en = db.Column(db.DateTime, default=datetime.utcnow)
     actualizado_en = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

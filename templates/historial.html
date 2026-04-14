@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Cabecera -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1>📊 Historial de {{ perfil.nombre }}</h1>
+            <p style="color: #7F8C8D; margin-top: 8px;">
+                Evolución y progreso de las sesiones
+            </p>
+        </div>
+        <a href="/inicio" class="btn btn-primary">← Volver</a>
+    </div>
+</div>
+
+<!-- Informe semanal -->
+<div class="card">
+    <h2>📅 Informe semanal</h2>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 16px;">
+
+        <div style="flex: 1; min-width: 140px; background: #F0F7FF; border: 2px solid #4A90D9; border-radius: 16px; padding: 20px; text-align: center;">
+            <div style="font-size: 42px; font-weight: bold; color: #4A90D9;">{{ total_semana }}</div>
+            <div style="color: #7F8C8D; margin-top: 4px;">Sesiones jugadas</div>
+        </div>
+
+        <div style="flex: 1; min-width: 140px; background: #F6FFED; border: 2px solid #52C41A; border-radius: 16px; padding: 20px; text-align: center;">
+            <div style="font-size: 42px; font-weight: bold; color: #52C41A;">{{ porcentaje_semana }}%</div>
+            <div style="color: #7F8C8D; margin-top: 4px;">Aciertos esta semana</div>
+        </div>
+
+        <div style="flex: 1; min-width: 140px; background: #FFF7E6; border: 2px solid #FAAD14; border-radius: 16px; padding: 20px; text-align: center;">
+            <div style="font-size: 42px; font-weight: bold; color: #FAAD14;">{{ correctas_semana }}</div>
+            <div style="color: #7F8C8D; margin-top: 4px;">Respuestas correctas</div>
+        </div>
+
+        {% if mejor_sesion %}
+        <div style="flex: 1; min-width: 140px; background: #FFF0F6; border: 2px solid #FF4D4F; border-radius: 16px; padding: 20px; text-align: center;">
+            <div style="font-size: 42px; font-weight: bold; color: #FF4D4F;">
+                {{ round((mejor_sesion.respuestas_correctas / mejor_sesion.total_preguntas * 100)) if mejor_sesion.total_preguntas > 0 else 0 }}%
+            </div>
+            <div style="color: #7F8C8D; margin-top: 4px;">Mejor sesión</div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Mensaje motivador -->
+    <div style="margin-top: 20px; padding: 16px; background: #F8F9FA; border-radius: 12px; font-size: 18px;">
+        {% if total_semana == 0 %}
+            😴 Esta semana no se ha jugado ninguna sesión. ¡Anímate a jugar hoy!
+        {% elif porcentaje_semana >= 80 %}
+            🌟 ¡Semana excelente! {{ perfil.nombre }} está en gran forma.
+        {% elif porcentaje_semana >= 60 %}
+            👍 ¡Buena semana! Seguir practicando cada día marca la diferencia.
+        {% elif porcentaje_semana >= 40 %}
+            💪 ¡Buen esfuerzo esta semana! La constancia es lo más importante.
+        {% else %}
+            🤗 Esta semana ha sido difícil, pero lo importante es no rendirse.
+        {% endif %}
+    </div>
+</div>
+
+<!-- Gráfica de evolución -->
+<div class="card">
+    <h2>📈 Evolución de aciertos</h2>
+    {% if grafica_fechas %}
+    <canvas id="graficaEvolucion" style="max-height: 300px;"></canvas>
+    {% else %}
+    <p style="color: #7F8C8D; text-align: center; padding: 32px;">
+        Aún no hay suficientes sesiones para mostrar la gráfica.
+    </p>
+    {% endif %}
+</div>
+
+<!-- Calendario de actividad -->
+<div class="card">
+    <h2>🗓️ Calendario de actividad (últimos 30 días)</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px;">
+        {% for fecha, count in calendario.items() | sort %}
+        <div style="
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: {% if count == 0 %}#F0F0F0{% elif count == 1 %}#B5D4F4{% elif count == 2 %}#4A90D9{% else %}#1a5fa8{% endif %};
+            color: {% if count == 0 %}#AAAAAA{% else %}white{% endif %};
+            title='{{ fecha }}'
+        " title="{{ fecha }} — {{ count }} sesión{% if count != 1 %}es{% endif %}">
+            {{ fecha.split('-')[2] }}
+        </div>
+        {% endfor %}
+    </div>
+    <div style="display: flex; gap: 12px; margin-top: 16px; align-items: center; font-size: 16px; color: #7F8C8D;">
+        <span>Menos</span>
+        <div style="width: 20px; height: 20px; border-radius: 4px; background: #F0F0F0;"></div>
+        <div style="width: 20px; height: 20px; border-radius: 4px; background: #B5D4F4;"></div>
+        <div style="width: 20px; height: 20px; border-radius: 4px; background: #4A90D9;"></div>
+        <div style="width: 20px; height: 20px; border-radius: 4px; background: #1a5fa8;"></div>
+        <span>Más</span>
+    </div>
+</div>
+
+<!-- Historial de sesiones -->
+<div class="card">
+    <h2>🕐 Sesiones anteriores</h2>
+    {% if sesiones %}
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 18px;">
+            <thead>
+                <tr style="border-bottom: 2px solid #E8ECF0;">
+                    <th style="padding: 12px; text-align: left; color: #7F8C8D;">Fecha</th>
+                    <th style="padding: 12px; text-align: center; color: #7F8C8D;">✅ Correctas</th>
+                    <th style="padding: 12px; text-align: center; color: #7F8C8D;">❌ Incorrectas</th>
+                    <th style="padding: 12px; text-align: center; color: #7F8C8D;">⏭️ Pasadas</th>
+                    <th style="padding: 12px; text-align: center; color: #7F8C8D;">% Acierto</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in sesiones %}
+                <tr style="border-bottom: 1px solid #E8ECF0;">
+                    <td style="padding: 12px;">{{ s.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td style="padding: 12px; text-align: center; color: #52C41A; font-weight: bold;">{{ s.respuestas_correctas }}</td>
+                    <td style="padding: 12px; text-align: center; color: #FF4D4F; font-weight: bold;">{{ s.respuestas_incorrectas }}</td>
+                    <td style="padding: 12px; text-align: center; color: #FAAD14; font-weight: bold;">{{ s.preguntas_pasadas }}</td>
+                    <td style="padding: 12px; text-align: center;">
+                        <span style="
+                            background: {% if (s.respuestas_correctas / s.total_preguntas * 100) >= 80 %}#F6FFED{% elif (s.respuestas_correctas / s.total_preguntas * 100) >= 60 %}#E6F7FF{% else %}#FFF7E6{% endif %};
+                            color: {% if (s.respuestas_correctas / s.total_preguntas * 100) >= 80 %}#52C41A{% elif (s.respuestas_correctas / s.total_preguntas * 100) >= 60 %}#4A90D9{% else %}#FAAD14{% endif %};
+                            padding: 4px 12px;
+                            border-radius: 999px;
+                            font-weight: bold;
+                        ">
+                            {{ round(s.respuestas_correctas / s.total_preguntas * 100) if s.total_preguntas > 0 else 0 }}%
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: #7F8C8D; text-align: center; padding: 32px;">
+        Aún no hay sesiones registradas. ¡Empieza a jugar!
+    </p>
+    {% endif %}
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+{% if grafica_fechas %}
+const ctx = document.getElementById('graficaEvolucion').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ grafica_fechas | tojson }},
+        datasets: [{
+            label: '% de aciertos',
+            data: {{ grafica_porcentajes | tojson }},
+            borderColor: '#4A90D9',
+            backgroundColor: 'rgba(74, 144, 217, 0.1)',
+            borderWidth: 3,
+            pointBackgroundColor: '#4A90D9',
+            pointRadius: 6,
+            tension: 0.4,
+            fill: true,
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                min: 0,
+                max: 100,
+                ticks: {
+                    callback: value => value + '%',
+                    font: { size: 14 }
+                }
+            },
+            x: {
+                ticks: { font: { size: 14 } }
+            }
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: context => context.parsed.y + '% de aciertos'
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+
+{% endblock %}

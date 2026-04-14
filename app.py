@@ -3,6 +3,7 @@ from flask_login import LoginManager
 from dotenv import load_dotenv
 from models.models import db, Usuario
 import os
+import math
 
 load_dotenv()
 
@@ -30,7 +31,9 @@ def create_app():
     app.register_blueprint(auth)
     app.register_blueprint(perfil)
     app.register_blueprint(juego)
-
+    
+    app.jinja_env.globals['round'] = round
+    
     with app.app_context():
         db.create_all()
 
@@ -39,4 +42,3 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     app.run(debug=True)
-    

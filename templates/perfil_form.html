@@ -157,6 +157,20 @@
         >
     </div>
 
+    <div class="card">
+        <h2>📝 Información adicional</h2>
+        <p style="color: #7F8C8D; margin-bottom: 16px; font-size: 18px;">
+            Escribe aquí cualquier información extra: anécdotas, frases que repite, 
+            lugares especiales, trabajos que tuvo, canciones favoritas...
+            Cuanto más detallado mejor.
+        </p>
+        <textarea
+            name="informacion_adicional"
+            placeholder="Ejemplo: De joven trabajó de costurera en Sevilla. Su canción favorita es La Bien Pagá. Tiene una hermana llamada Rosario en Barcelona..."
+            rows="6"
+        >{{ perfil.informacion_adicional if perfil else '' }}</textarea>
+    </div>
+
     <div style="display: flex; gap: 12px; margin-bottom: 40px;">
         <button type="submit" class="btn btn-success" style="flex: 1;">
             💾 Guardar perfil

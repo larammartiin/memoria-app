@@ -11,8 +11,14 @@ juego = Blueprint('juego', __name__)
 LETRAS = ['A','B','C','D','E','F','G','H','I','J','K','L','M',
           'N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 
-def generar_pregunta_ia(perfil, letra):
+def generar_pregunta_ia(perfil, letra, preguntas_usadas):
     cliente = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+    historial = ""
+    if preguntas_usadas:
+        historial = "Preguntas ya realizadas en esta sesión (NO repitas estas ni preguntes por las mismas respuestas):\n"
+        for p in preguntas_usadas:
+            historial += f"- {p}\n"
 
     prompt = f"""Eres un terapeuta cognitivo especializado en estimulación de memoria episódica en personas mayores.
 
@@ -31,20 +37,21 @@ Perfil del usuario:
 - Película favorita: {perfil.pelicula_favorita}
 - Recuerdos especiales: {perfil.recuerdos_especiales}
 - Mascota: {perfil.nombre_mascota} ({perfil.tipo_mascota})
+- Información adicional: {perfil.informacion_adicional}
 
-Tarea: Genera una pregunta de memoria para la letra "{letra}" usando información del perfil anterior.
+{historial}
 
-REGLAS IMPORTANTES:
-1. Decide si la respuesta EMPIEZA por "{letra}" o CONTIENE la letra "{letra}" en cualquier posición.
-2. El campo "tipo" debe ser exactamente "empieza" si la respuesta empieza por "{letra}", o "contiene" si la contiene en otra posición.
-3. El campo "indicacion" debe ser exactamente:
-   - Si empieza: "Empieza por {letra}"
-   - Si contiene: "Contiene la {letra}"
-4. La pregunta debe ser cálida, afectuosa y apropiada para alguien con deterioro cognitivo leve.
-5. Usa información del perfil siempre que sea posible. Si no hay datos para esa letra, genera una pregunta de cultura general sencilla.
-6. La respuesta debe ser una sola palabra o nombre corto.
+Tarea: Genera UNA pregunta de memoria para la letra "{letra}" usando información del perfil anterior.
+La respuesta correcta debe empezar por la letra "{letra}" o contenerla.
+La pregunta debe ser cálida, afectuosa y apropiada para alguien con deterioro cognitivo leve.
+Si no hay datos del perfil para esa letra genera una pregunta de cultura general sencilla.
 
-Responde ÚNICAMENTE con un JSON con este formato exacto, sin texto extra:
+REGLAS:
+1. El campo "indicacion" debe ser "Empieza por {letra}" o "Contiene la {letra}" según corresponda.
+2. La respuesta debe ser una sola palabra o nombre corto.
+3. No repitas ninguna de las preguntas ya realizadas.
+
+Responde ÚNICAMENTE con JSON con este formato exacto:
 {{
     "indicacion": "Empieza por {letra}",
     "pregunta": "texto de la pregunta aquí",
@@ -60,7 +67,7 @@ Responde ÚNICAMENTE con un JSON con este formato exacto, sin texto extra:
     )
 
     datos = json.loads(respuesta.choices[0].message.content)
-    return datos 
+    return datos
 
 
 @juego.route('/juego/<int:perfil_id>')
@@ -78,6 +85,7 @@ def iniciar_juego(perfil_id):
     session['correctas'] = 0
     session['incorrectas'] = 0
     session['pasadas'] = 0
+    session['preguntas_usadas'] = []
 
     return redirect(url_for('juego.pregunta'))
 
@@ -94,10 +102,26 @@ def pregunta():
     perfil_id = session.get('perfil_id')
     p = PerfilMayor.query.get(perfil_id)
 
-    datos = generar_pregunta_ia(p, letra)
+    preguntas_usadas = session.get('preguntas_usadas', [])
+    datos = generar_pregunta_ia(p, letra, preguntas_usadas)
 
     session['pregunta_actual'] = datos
     session['letra_actual_texto'] = letra
+
+    import math
+    posiciones = []
+    total = len(LETRAS)
+    for i, l in enumerate(LETRAS):
+        angle = (i * (360 / total) - 90) * (math.pi / 180)
+        x = 152 + 145 * math.cos(angle)
+        y = 152 + 145 * math.sin(angle)
+        if i < letra_index:
+            estado = 'pasada'
+        elif i == letra_index:
+            estado = 'activa'
+        else:
+            estado = 'pendiente'
+        posiciones.append({'letra': l, 'x': x, 'y': y, 'estado': estado})
 
     return render_template('juego.html',
         letra=letra,
@@ -111,6 +135,7 @@ def pregunta():
         pasadas=session.get('pasadas', 0),
         nombre_mayor=p.nombre,
         letras=LETRAS,
+        posiciones=posiciones,
     )
 
 
@@ -156,6 +181,9 @@ def responder():
     sesion_db.preguntas_pasadas = session.get('pasadas', 0)
     db.session.commit()
 
+    preguntas_usadas = session.get('preguntas_usadas', [])
+    preguntas_usadas.append(datos['pregunta'])
+    session['preguntas_usadas'] = preguntas_usadas
     session['letra_actual'] = session.get('letra_actual', 0) + 1
 
     return redirect(url_for('juego.pregunta'))
