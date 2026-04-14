@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Barra de progreso -->
+<div class="card" style="padding: 20px 32px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 style="margin: 0;">🎮 Jugando: {{ nombre_mayor }}</h2>
+        <div style="display: flex; gap: 16px; font-size: 18px;">
+            <span style="color: #52C41A;">✅ {{ correctas }}</span>
+            <span style="color: #FF4D4F;">❌ {{ incorrectas }}</span>
+            <span style="color: #FAAD14;">⏭️ {{ pasadas }}</span>
+        </div>
+    </div>
+
+    <!-- Barra de progreso -->
+    <div style="background: #E8ECF0; border-radius: 999px; height: 12px;">
+        <div style="
+            background: #4A90D9;
+            height: 12px;
+            border-radius: 999px;
+            width: {{ (letra_index / total_letras * 100) | int }}%;
+            transition: width 0.3s;
+        "></div>
+    </div>
+    <p style="color: #7F8C8D; margin-top: 8px; font-size: 16px;">
+        Pregunta {{ letra_index + 1 }} de {{ total_letras }}
+    </p>
+</div>
+
+<!-- Rosco de letras -->
+<div class="card">
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+        {% for l in letras %}
+        <div style="
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            background-color: {% if loop.index0 < letra_index %}#E8ECF0{% elif loop.index0 == letra_index %}#4A90D9{% else %}#F8F9FA{% endif %};
+            color: {% if loop.index0 == letra_index %}white{% else %}#2C3E50{% endif %};
+            border: 2px solid {% if loop.index0 == letra_index %}#4A90D9{% else %}#E8ECF0{% endif %};
+        ">
+            {{ l }}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Pregunta actual -->
+<div class="card text-center">
+    <div style="
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #4A90D9;
+        color: white;
+        font-size: 42px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+    ">
+        {{ letra }}
+    </div>
+
+   <!-- Indicación empieza/contiene -->
+    <div style="
+        display: inline-block;
+        background: #EEF4FF;
+        border: 2px solid #4A90D9;
+        border-radius: 999px;
+        padding: 8px 24px;
+        font-size: 20px;
+        font-weight: bold;
+        color: #4A90D9;
+        margin-bottom: 20px;
+    ">
+        {{ indicacion }}
+    </div>
+
+    <h2 style="font-size: 26px; line-height: 1.4; margin-bottom: 32px;">
+        {{ pregunta }}
+    </h2>
+     
+
+    <!-- Pista -->
+    <div id="pista-container" style="display: none; margin-bottom: 24px;">
+        <div style="
+            background: #FFF7E6;
+            border: 2px solid #FAAD14;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 20px;
+            color: #2C3E50;
+        ">
+            💡 Pista: {{ pista }}
+        </div>
+    </div>
+
+    <!-- Formulario de respuesta -->
+    <form method="POST" action="/juego/responder">
+        <input
+            type="text"
+            name="respuesta"
+            placeholder="Tu respuesta empieza por {{ letra }}..."
+            style="font-size: 24px; text-align: center; text-transform: uppercase;"
+            autofocus
+        >
+
+        <div style="display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap;">
+            <button
+                type="submit"
+                name="accion"
+                value="responder"
+                class="btn btn-success"
+                style="flex: 2;"
+            >
+                ✅ Responder
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-warning"
+                style="flex: 1;"
+                onclick="mostrarPista()"
+            >
+                💡 Pista
+            </button>
+
+            <button
+                type="submit"
+                name="accion"
+                value="pasar"
+                class="btn btn-danger"
+                style="flex: 1;"
+            >
+                ⏭️ Pasar
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function mostrarPista() {
+        document.getElementById('pista-container').style.display = 'block';
+    }
+
+    // Enviar con Enter
+    document.querySelector('input[name="respuesta"]').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            this.closest('form').querySelector('[value="responder"]').click();
+        }
+    });
+</script>
+
+{% endblock %}

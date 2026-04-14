@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card">
+    <h1>
+        {% if perfil %}
+            ✏️ Editar perfil de {{ perfil.nombre }}
+        {% else %}
+            👤 Nuevo perfil
+        {% endif %}
+    </h1>
+    <p style="color: #7F8C8D; margin-top: 8px;">
+        Cuanta más información añadas, más personalizados serán los ejercicios
+    </p>
+</div>
+
+<form method="POST">
+
+    <div class="card">
+        <h2>📋 Datos básicos</h2>
+
+        <label>Nombre completo *</label>
+        <input
+            type="text"
+            name="nombre"
+            placeholder="María García López"
+            value="{{ perfil.nombre if perfil else '' }}"
+            required
+        >
+
+        <label>Edad</label>
+        <input
+            type="number"
+            name="edad"
+            placeholder="78"
+            value="{{ perfil.edad if perfil else '' }}"
+        >
+
+        <label>Ciudad natal</label>
+        <input
+            type="text"
+            name="ciudad_natal"
+            placeholder="Sevilla"
+            value="{{ perfil.ciudad_natal if perfil else '' }}"
+        >
+    </div>
+
+    <div class="card">
+        <h2>👨‍👩‍👧‍👦 Familia</h2>
+
+        <label>Nombre de la pareja</label>
+        <input
+            type="text"
+            name="nombre_pareja"
+            placeholder="Antonio"
+            value="{{ perfil.nombre_pareja if perfil else '' }}"
+        >
+
+        <label>Nombres de los hijos (separados por comas)</label>
+        <input
+            type="text"
+            name="nombres_hijos"
+            placeholder="Carmen, Luis, Ana"
+            value="{{ perfil.nombres_hijos if perfil else '' }}"
+        >
+
+        <label>Nombres de los nietos (separados por comas)</label>
+        <input
+            type="text"
+            name="nombres_nietos"
+            placeholder="Pablo, Sofía, Miguel"
+            value="{{ perfil.nombres_nietos if perfil else '' }}"
+        >
+
+        <label>Nombre del mejor amigo o amiga</label>
+        <input
+            type="text"
+            name="nombre_mejor_amigo"
+            placeholder="Paquita"
+            value="{{ perfil.nombre_mejor_amigo if perfil else '' }}"
+        >
+    </div>
+
+    <div class="card">
+        <h2>✈️ Recuerdos y lugares</h2>
+
+        <label>Lugar de veraneo</label>
+        <input
+            type="text"
+            name="lugar_veraneo"
+            placeholder="Benidorm"
+            value="{{ perfil.lugar_veraneo if perfil else '' }}"
+        >
+
+        <label>Viajes favoritos</label>
+        <input
+            type="text"
+            name="viajes_favoritos"
+            placeholder="París, Roma, Nueva York"
+            value="{{ perfil.viajes_favoritos if perfil else '' }}"
+        >
+
+        <label>Recuerdos especiales</label>
+        <textarea
+            name="recuerdos_especiales"
+            placeholder="Cuéntanos recuerdos importantes: bodas, viajes especiales, momentos felices..."
+            rows="4"
+        >{{ perfil.recuerdos_especiales if perfil else '' }}</textarea>
+    </div>
+
+    <div class="card">
+        <h2>🎯 Aficiones y gustos</h2>
+
+        <label>Aficiones</label>
+        <input
+            type="text"
+            name="aficiones"
+            placeholder="Costura, jardinería, bailar"
+            value="{{ perfil.aficiones if perfil else '' }}"
+        >
+
+        <label>Comida favorita</label>
+        <input
+            type="text"
+            name="comida_favorita"
+            placeholder="Paella"
+            value="{{ perfil.comida_favorita if perfil else '' }}"
+        >
+
+        <label>Película o serie favorita</label>
+        <input
+            type="text"
+            name="pelicula_favorita"
+            placeholder="Lo que el viento se llevó"
+            value="{{ perfil.pelicula_favorita if perfil else '' }}"
+        >
+    </div>
+
+    <div class="card">
+        <h2>🐾 Mascota</h2>
+
+        <label>Nombre de la mascota</label>
+        <input
+            type="text"
+            name="nombre_mascota"
+            placeholder="Tobi"
+            value="{{ perfil.nombre_mascota if perfil else '' }}"
+        >
+
+        <label>Tipo de mascota</label>
+        <input
+            type="text"
+            name="tipo_mascota"
+            placeholder="Perro, gato..."
+            value="{{ perfil.tipo_mascota if perfil else '' }}"
+        >
+    </div>
+
+    <div style="display: flex; gap: 12px; margin-bottom: 40px;">
+        <button type="submit" class="btn btn-success" style="flex: 1;">
+            💾 Guardar perfil
+        </button>
+        <a href="/inicio" class="btn btn-danger" style="flex: 1; text-align: center;">
+            Cancelar
+        </a>
+    </div>
+
+</form>
+
+{% endblock %}

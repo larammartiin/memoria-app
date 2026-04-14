@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="max-width: 500px; margin: 60px auto;">
+    <div class="card">
+
+        <div class="text-center mb-16">
+            <div style="font-size: 72px;">🧠</div>
+            <h1 style="color: #4A90D9;">MemorIA</h1>
+            <p style="font-size: 20px; color: #7F8C8D;">Ejercicios de memoria personalizados</p>
+        </div>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <label>Correo electrónico</label>
+            <input 
+                type="email" 
+                name="email" 
+                placeholder="tu@email.com"
+                required
+            >
+
+            <label>Contraseña</label>
+            <input 
+                type="password" 
+                name="password" 
+                placeholder="••••••••"
+                required
+            >
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
+                Entrar
+            </button>
+        </form>
+
+        <div class="text-center mt-24">
+            <p style="color: #7F8C8D; font-size: 18px;">¿No tienes cuenta?</p>
+            <a href="/registro" class="btn btn-primary" style="margin-top: 12px; display: block;">
+                Crear cuenta nueva
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "axios": "^1.15.0",
+    "react-native-dotenv": "^3.4.11",
+    "react-native-vector-icons": "^10.3.0"
+  }
+}
