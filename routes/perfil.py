@@ -131,8 +131,9 @@ def historial(perfil_id):
     # Mejor sesión
     mejor_sesion = None
     if sesiones:
-        mejor_sesion = max(sesiones, key=lambda s: (s.respuestas_correctas / s.total_preguntas) if s.total_preguntas > 0 else 0)
-
+        sesiones_validas = [s for s in sesiones if s.total_preguntas > 0]
+        mejor_sesion = max(sesiones_validas, key=lambda s: s.respuestas_correctas / s.total_preguntas) if sesiones_validas else None
+        
     return render_template('historial.html',
         perfil=p,
         sesiones=sesiones,

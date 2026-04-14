@@ -210,3 +210,123 @@ def resultado():
         nombre_mayor=p.nombre,
         perfil_id=perfil_id,
     )
+@juego.route('/juego/mayor/<int:perfil_id>')
+@login_required
+def iniciar_juego_mayor(perfil_id):
+    p = PerfilMayor.query.get_or_404(perfil_id)
+
+    nueva_sesion = Sesion(perfil_id=p.id)
+    db.session.add(nueva_sesion)
+    db.session.commit()
+
+    session['sesion_id'] = nueva_sesion.id
+    session['perfil_id'] = perfil_id
+    session['letra_actual'] = 0
+    session['correctas'] = 0
+    session['incorrectas'] = 0
+    session['pasadas'] = 0
+    session['preguntas_usadas'] = []
+    session['estados_letras'] = ['pendiente'] * len(LETRAS)
+
+    return redirect(url_for('juego.pregunta_mayor'))
+
+
+@juego.route('/juego/pregunta_mayor')
+@login_required
+def pregunta_mayor():
+    letra_index = session.get('letra_actual', 0)
+
+    if letra_index >= len(LETRAS):
+        return redirect(url_for('juego.resultado'))
+
+    letra = LETRAS[letra_index]
+    perfil_id = session.get('perfil_id')
+    p = PerfilMayor.query.get(perfil_id)
+
+    preguntas_usadas = session.get('preguntas_usadas', [])
+    datos = generar_pregunta_ia(p, letra, preguntas_usadas)
+
+    session['pregunta_actual'] = datos
+    session['letra_actual_texto'] = letra
+
+    import math
+    posiciones = []
+    estados = session.get('estados_letras', ['pendiente'] * len(LETRAS))
+    for i, l in enumerate(LETRAS):
+        angle = (i * (360 / len(LETRAS)) - 90) * (math.pi / 180)
+        x = 152 + 145 * math.cos(angle)
+        y = 152 + 145 * math.sin(angle)
+        if i == letra_index:
+            estado = 'activa'
+        else:
+            estado = estados[i]
+        posiciones.append({'letra': l, 'x': x, 'y': y, 'estado': estado})
+
+    return render_template('juego_mayor.html',
+        letra=letra,
+        letra_index=letra_index,
+        total_letras=len(LETRAS),
+        indicacion=datos['indicacion'],
+        pregunta=datos['pregunta'],
+        pista=datos['pista'],
+        correctas=session.get('correctas', 0),
+        incorrectas=session.get('incorrectas', 0),
+        pasadas=session.get('pasadas', 0),
+        nombre_mayor=p.nombre,
+        posiciones=posiciones,
+    )
+
+
+@juego.route('/juego/responder_mayor', methods=['POST'])
+@login_required
+def responder_mayor():
+    respuesta_usuario = request.form.get('respuesta', '').strip().upper()
+    accion = request.form.get('accion')
+
+    datos = session.get('pregunta_actual')
+    letra = session.get('letra_actual_texto')
+    sesion_id = session.get('sesion_id')
+    letra_index = session.get('letra_actual', 0)
+    estados = session.get('estados_letras', ['pendiente'] * len(LETRAS))
+
+    es_correcta = False
+    if accion == 'pasar':
+        session['pasadas'] = session.get('pasadas', 0) + 1
+        estados[letra_index] = 'pasada'
+    else:
+        respuesta_correcta = datos['respuesta'].upper()
+        es_correcta = respuesta_usuario.startswith(letra) and \
+                      any(palabra in respuesta_correcta for palabra in respuesta_usuario.split())
+        if es_correcta:
+            session['correctas'] = session.get('correctas', 0) + 1
+            estados[letra_index] = 'correcta'
+        else:
+            session['incorrectas'] = session.get('incorrectas', 0) + 1
+            estados[letra_index] = 'incorrecta'
+
+    session['estados_letras'] = estados
+
+    nueva_pregunta = Pregunta(
+        sesion_id=sesion_id,
+        letra=letra,
+        texto_pregunta=datos['pregunta'],
+        respuesta_correcta=datos['respuesta'],
+        respuesta_usuario=respuesta_usuario if accion != 'pasar' else None,
+        es_correcta=es_correcta,
+        pista=datos['pista']
+    )
+    db.session.add(nueva_pregunta)
+
+    sesion_db = Sesion.query.get(sesion_id)
+    sesion_db.total_preguntas = letra_index + 1
+    sesion_db.respuestas_correctas = session.get('correctas', 0)
+    sesion_db.respuestas_incorrectas = session.get('incorrectas', 0)
+    sesion_db.preguntas_pasadas = session.get('pasadas', 0)
+    db.session.commit()
+
+    preguntas_usadas = session.get('preguntas_usadas', [])
+    preguntas_usadas.append(datos['pregunta'])
+    session['preguntas_usadas'] = preguntas_usadas
+    session['letra_actual'] = letra_index + 1
+
+    return redirect(url_for('juego.pregunta_mayor'))
