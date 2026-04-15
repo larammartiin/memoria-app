@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="max-width: 600px; margin: 60px auto;">
+    <div class="card text-center">
+
+        <div style="font-size: 80px; margin-bottom: 16px;">🧠</div>
+
+        <h1 style="color: #4A90D9; margin-bottom: 8px;">
+            ¡Hola, {{ nombre_mayor }}!
+        </h1>
+
+        <p style="font-size: 22px; color: #7F8C8D; margin-bottom: 32px;">
+            {{ fecha_hoy }}
+        </p>
+
+        <!-- Mensaje motivador de la IA -->
+        <div style="
+            background: #F0F7FF;
+            border: 2px solid #4A90D9;
+            border-radius: 16px;
+            padding: 28px;
+            font-size: 24px;
+            line-height: 1.6;
+            color: #2C3E50;
+            margin-bottom: 32px;
+            font-style: italic;
+        ">
+            💬 {{ mensaje }}
+        </div>
+
+        <!-- Estadísticas rápidas -->
+        {% if ultima_sesion %}
+        <div style="
+            background: #F8F9FA;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 32px;
+            font-size: 18px;
+            color: #7F8C8D;
+        ">
+            Última sesión: {{ ultima_sesion.fecha.strftime('%d/%m/%Y') }} —
+            <span style="color: #52C41A; font-weight: bold;">{{ ultima_sesion.respuestas_correctas }} correctas</span>
+        </div>
+        {% endif %}
+
+        <a href="{{ url_juego }}" class="btn btn-success" style="font-size: 26px; padding: 20px 48px; display: block;">
+            ¡Empezar a jugar! 🎮
+        </a>
+
+    </div>
+</div>
+
+{% endblock %}

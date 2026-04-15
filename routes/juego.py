@@ -14,61 +14,221 @@ LETRAS = ['A','B','C','D','E','F','G','H','I','J','K','L','M',
 def generar_pregunta_ia(perfil, letra, preguntas_usadas):
     cliente = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
+    # Construir diccionario de datos reales del perfil
+    datos_perfil = {
+        'A': [],
+        'B': [], 'C': [], 'D': [], 'E': [], 'F': [], 'G': [],
+        'H': [], 'I': [], 'J': [], 'K': [], 'L': [], 'M': [],
+        'N': [], 'O': [], 'P': [], 'Q': [], 'R': [], 'S': [],
+        'T': [], 'U': [], 'V': [], 'W': [], 'X': [], 'Y': [], 'Z': []
+    }
+
+    # Lista plana de todos los datos del perfil con su contexto
+    datos_concretos = []
+
+    if perfil.nombre_pareja:
+        datos_concretos.append(f"Su pareja se llama {perfil.nombre_pareja}")
+    if perfil.nombres_hijos:
+        for hijo in perfil.nombres_hijos.split(','):
+            hijo = hijo.strip()
+            if hijo:
+                datos_concretos.append(f"Tiene un hijo/a que se llama {hijo}")
+    if perfil.nombres_nietos:
+        for nieto in perfil.nombres_nietos.split(','):
+            nieto = nieto.strip()
+            if nieto:
+                datos_concretos.append(f"Tiene un nieto/a que se llama {nieto}")
+    if perfil.nombre_mejor_amigo:
+        datos_concretos.append(f"Su mejor amigo/a se llama {perfil.nombre_mejor_amigo}")
+    if perfil.ciudad_natal:
+        datos_concretos.append(f"Nació en {perfil.ciudad_natal}")
+    if perfil.lugar_veraneo:
+        datos_concretos.append(f"Veranea en {perfil.lugar_veraneo}")
+    if perfil.viajes_favoritos:
+        for viaje in perfil.viajes_favoritos.split(','):
+            viaje = viaje.strip()
+            if viaje:
+                datos_concretos.append(f"Ha viajado a {viaje}")
+    if perfil.aficiones:
+        for aficion in perfil.aficiones.split(','):
+            aficion = aficion.strip()
+            if aficion:
+                datos_concretos.append(f"Le gusta {aficion}")
+    if perfil.comida_favorita:
+        datos_concretos.append(f"Su comida favorita es {perfil.comida_favorita}")
+    if perfil.pelicula_favorita:
+        datos_concretos.append(f"Su película favorita es {perfil.pelicula_favorita}")
+    if perfil.nombre_mascota:
+        datos_concretos.append(f"Su mascota se llama {perfil.nombre_mascota} y es un/a {perfil.tipo_mascota}")
+    if perfil.informacion_adicional:
+        datos_concretos.append(perfil.informacion_adicional)
+
+    # Filtrar datos cuya respuesta contiene la letra buscada
+    datos_con_letra = []
+    for dato in datos_concretos:
+        palabras = dato.split()
+        for palabra in palabras:
+            palabra_limpia = palabra.strip('.,;:()¿?¡!').upper()
+            if palabra_limpia.startswith(letra) or letra in palabra_limpia:
+                datos_con_letra.append(dato)
+                break
+
     historial = ""
     if preguntas_usadas:
-        historial = "Preguntas ya realizadas en esta sesión (NO repitas estas ni preguntes por las mismas respuestas):\n"
-        for p in preguntas_usadas:
-            historial += f"- {p}\n"
+        historial = f"NO repitas estas preguntas ya hechas:\n" + "\n".join(f"- {p}" for p in preguntas_usadas)
+
+    contexto_letra = ""
+    if datos_con_letra:
+        contexto_letra = f"""
+DATOS DEL PERFIL RELACIONADOS CON LA LETRA "{letra}":
+{chr(10).join(f'- {d}' for d in datos_con_letra)}
+
+IMPORTANTE: La respuesta correcta DEBE ser exactamente uno de los datos reales listados arriba.
+No inventes ni cambies los datos. Usa exactamente los nombres y lugares tal como aparecen.
+"""
+    else:
+        contexto_letra = f"""
+No hay datos del perfil cuya respuesta empiece por o contenga la letra "{letra}".
+En este caso genera una pregunta de cultura general sencilla cuya respuesta contenga la letra "{letra}".
+"""
 
     prompt = f"""Eres un terapeuta cognitivo especializado en estimulación de memoria episódica en personas mayores.
 
-Perfil del usuario:
-- Nombre: {perfil.nombre}
-- Edad: {perfil.edad} años
-- Ciudad natal: {perfil.ciudad_natal}
-- Pareja: {perfil.nombre_pareja}
-- Hijos: {perfil.nombres_hijos}
-- Nietos: {perfil.nombres_nietos}
-- Mejor amigo/a: {perfil.nombre_mejor_amigo}
-- Lugar de veraneo: {perfil.lugar_veraneo}
-- Viajes favoritos: {perfil.viajes_favoritos}
-- Aficiones: {perfil.aficiones}
-- Comida favorita: {perfil.comida_favorita}
-- Película favorita: {perfil.pelicula_favorita}
-- Recuerdos especiales: {perfil.recuerdos_especiales}
-- Mascota: {perfil.nombre_mascota} ({perfil.tipo_mascota})
-- Información adicional: {perfil.informacion_adicional}
+Estás generando preguntas personalizadas para {perfil.nombre}, de {perfil.edad} años.
+
+{contexto_letra}
 
 {historial}
 
-Tarea: Genera UNA pregunta de memoria para la letra "{letra}" usando información del perfil anterior.
-La respuesta correcta debe empezar por la letra "{letra}" o contenerla.
-La pregunta debe ser cálida, afectuosa y apropiada para alguien con deterioro cognitivo leve.
-Si no hay datos del perfil para esa letra genera una pregunta de cultura general sencilla.
+Genera UNA sola pregunta de memoria para la letra "{letra}".
+- La pregunta debe ser cálida, afectuosa y fácil de entender.
+- La respuesta debe contener la letra "{letra}".
+- El campo "indicacion" debe ser "Empieza por {letra}" si la respuesta empieza por esa letra, o "Contiene la {letra}" si la contiene en otra posición.
+- La pista debe ayudar a recordar sin dar directamente la respuesta.
 
-REGLAS:
-1. El campo "indicacion" debe ser "Empieza por {letra}" o "Contiene la {letra}" según corresponda.
-2. La respuesta debe ser una sola palabra o nombre corto.
-3. No repitas ninguna de las preguntas ya realizadas.
-
-Responde ÚNICAMENTE con JSON con este formato exacto:
+Responde ÚNICAMENTE con este JSON exacto:
 {{
     "indicacion": "Empieza por {letra}",
-    "pregunta": "texto de la pregunta aquí",
-    "respuesta": "respuesta correcta aquí",
-    "pista": "una pista breve"
+    "pregunta": "texto de la pregunta",
+    "respuesta": "respuesta correcta",
+    "pista": "pista breve"
 }}"""
 
     respuesta = cliente.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
+        model="gpt-4o",
+        messages=[
+            {
+                "role": "system",
+                "content": f"""Eres un asistente que genera preguntas de memoria personalizadas.
+REGLA ABSOLUTA: Si se te proporcionan datos del perfil para una letra, la respuesta SIEMPRE debe ser exactamente uno de esos datos reales. 
+NUNCA inventes datos. NUNCA uses información que no esté en el perfil.
+Si no hay datos del perfil para esa letra, genera cultura general sencilla."""
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
         max_tokens=300,
+        temperature=0,
         response_format={"type": "json_object"}
     )
 
     datos = json.loads(respuesta.choices[0].message.content)
     return datos
 
+
+def generar_mensaje_motivador(perfil, tipo, correctas=0, incorrectas=0, pasadas=0, total=0):
+    cliente = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+    if tipo == 'inicio':
+        prompt = f"""Eres un asistente cálido y motivador para personas mayores.
+
+Genera un mensaje de bienvenida corto y afectuoso (máximo 3 frases) para {perfil.nombre} que va a hacer sus ejercicios de memoria.
+Usa información personal para hacerlo más cercano:
+- Aficiones: {perfil.aficiones}
+- Familia: hijos ({perfil.nombres_hijos}), nietos ({perfil.nombres_nietos})
+- Lugar favorito: {perfil.lugar_veraneo}
+
+El mensaje debe ser cálido, motivador y natural. Como si fuera un amigo cercano.
+Responde ÚNICAMENTE con el texto del mensaje, sin comillas ni explicaciones."""
+
+    else:
+        porcentaje = round((correctas / total * 100)) if total > 0 else 0
+        prompt = f"""Eres un asistente cálido y motivador para personas mayores.
+
+Genera un mensaje de felicitación corto y afectuoso (máximo 3 frases) para {perfil.nombre} que acaba de terminar sus ejercicios de memoria.
+Resultados: {correctas} correctas de {total} preguntas ({porcentaje}%).
+
+El mensaje debe:
+- Felicitarle por haber jugado
+- Mencionar algo positivo de su resultado
+- Animarle a seguir practicando mañana
+- Ser muy cálido y cercano
+
+Responde ÚNICAMENTE con el texto del mensaje, sin comillas ni explicaciones."""
+
+    respuesta = cliente.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=150,
+    )
+
+    return respuesta.choices[0].message.content.strip()
+@juego.route('/juego/bienvenida/<int:perfil_id>')
+@login_required
+def bienvenida(perfil_id):
+    from datetime import datetime
+    from models.models import Sesion
+
+    p = PerfilMayor.query.get_or_404(perfil_id)
+
+    mensaje = generar_mensaje_motivador(p, 'inicio')
+
+    ultima_sesion = Sesion.query.filter_by(perfil_id=perfil_id)\
+        .order_by(Sesion.fecha.desc()).first()
+
+    dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
+    meses = ['enero','febrero','marzo','abril','mayo','junio',
+             'julio','agosto','septiembre','octubre','noviembre','diciembre']
+    hoy = datetime.now()
+    fecha_hoy = f"{dias[hoy.weekday()]}, {hoy.day} de {meses[hoy.month-1]} de {hoy.year}"
+
+    return render_template('bienvenida.html',
+        nombre_mayor=p.nombre,
+        mensaje=mensaje,
+        fecha_hoy=fecha_hoy,
+        ultima_sesion=ultima_sesion,
+        url_juego=url_for('juego.iniciar_juego', perfil_id=perfil_id),
+    )
+
+
+@juego.route('/juego/bienvenida_mayor/<int:perfil_id>')
+@login_required
+def bienvenida_mayor(perfil_id):
+    from datetime import datetime
+    from models.models import Sesion
+
+    p = PerfilMayor.query.get_or_404(perfil_id)
+
+    mensaje = generar_mensaje_motivador(p, 'inicio')
+
+    ultima_sesion = Sesion.query.filter_by(perfil_id=perfil_id)\
+        .order_by(Sesion.fecha.desc()).first()
+
+    dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
+    meses = ['enero','febrero','marzo','abril','mayo','junio',
+             'julio','agosto','septiembre','octubre','noviembre','diciembre']
+    hoy = datetime.now()
+    fecha_hoy = f"{dias[hoy.weekday()]}, {hoy.day} de {meses[hoy.month-1]} de {hoy.year}"
+
+    return render_template('bienvenida.html',
+        nombre_mayor=p.nombre,
+        mensaje=mensaje,
+        fecha_hoy=fecha_hoy,
+        ultima_sesion=ultima_sesion,
+        url_juego=url_for('juego.iniciar_juego_mayor', perfil_id=perfil_id),
+    )
 
 @juego.route('/juego/<int:perfil_id>')
 @login_required
@@ -78,6 +238,24 @@ def iniciar_juego(perfil_id):
     nueva_sesion = Sesion(perfil_id=p.id)
     db.session.add(nueva_sesion)
     db.session.commit()
+
+    session['sesion_id'] = nueva_sesion.id
+    session['perfil_id'] = perfil_id
+    session['letra_actual'] = 0
+    session['correctas'] = 0
+    session['incorrectas'] = 0
+    session['pasadas'] = 0
+    session['preguntas_usadas'] = []
+    session.pop('sesion_id', None)
+    session.pop('perfil_id', None)
+    session.pop('letra_actual', None)
+    session.pop('correctas', None)
+    session.pop('incorrectas', None)
+    session.pop('pasadas', None)
+    session.pop('preguntas_usadas', None)
+    session.pop('pregunta_actual', None)
+    session.pop('letra_actual_texto', None)
+    session.pop('estados_letras', None)
 
     session['sesion_id'] = nueva_sesion.id
     session['perfil_id'] = perfil_id
@@ -201,6 +379,14 @@ def resultado():
     perfil_id = session.get('perfil_id')
     p = PerfilMayor.query.get(perfil_id)
 
+    mensaje_final = generar_mensaje_motivador(
+        p, 'fin',
+        correctas=correctas,
+        incorrectas=incorrectas,
+        pasadas=pasadas,
+        total=total
+    )
+
     return render_template('resultado.html',
         correctas=correctas,
         incorrectas=incorrectas,
@@ -209,7 +395,9 @@ def resultado():
         porcentaje=porcentaje,
         nombre_mayor=p.nombre,
         perfil_id=perfil_id,
+        mensaje_final=mensaje_final,
     )
+
 @juego.route('/juego/mayor/<int:perfil_id>')
 @login_required
 def iniciar_juego_mayor(perfil_id):
@@ -226,7 +414,25 @@ def iniciar_juego_mayor(perfil_id):
     session['incorrectas'] = 0
     session['pasadas'] = 0
     session['preguntas_usadas'] = []
-    session['estados_letras'] = ['pendiente'] * len(LETRAS)
+    session.pop('sesion_id', None)
+    session.pop('perfil_id', None)
+    session.pop('letra_actual', None)
+    session.pop('correctas', None)
+    session.pop('incorrectas', None)
+    session.pop('pasadas', None)
+    session.pop('preguntas_usadas', None)
+    session.pop('pregunta_actual', None)
+    session.pop('letra_actual_texto', None)
+    session.pop('estados_letras', None)
+
+    session['sesion_id'] = nueva_sesion.id
+    session['perfil_id'] = perfil_id
+    session['letra_actual'] = 0
+    session['correctas'] = 0
+    session['incorrectas'] = 0
+    session['pasadas'] = 0
+    session['preguntas_usadas'] = []
+    
 
     return redirect(url_for('juego.pregunta_mayor'))
 

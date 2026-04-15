@@ -65,7 +65,7 @@
 
     </div>
 
-    <!-- Mensaje motivador -->
+    <!-- Mensaje motivador personalizado -->
     <div style="
         background: #F0F7FF;
         border: 2px solid #4A90D9;
@@ -74,18 +74,11 @@
         margin-bottom: 32px;
         font-size: 22px;
         color: #2C3E50;
+        font-style: italic;
     ">
-        {% if porcentaje >= 80 %}
-            🌟 ¡Excelente trabajo! Tu memoria está en gran forma hoy.
-        {% elif porcentaje >= 60 %}
-            👍 ¡Muy buen resultado! Sigue practicando cada día.
-        {% elif porcentaje >= 40 %}
-            💪 ¡Buen esfuerzo! Cada día que practicas mejoras un poco más.
-        {% else %}
-            🤗 ¡Lo importante es participar! Mañana lo harás aún mejor.
-        {% endif %}
+        💬 {{ mensaje_final }}
     </div>
-
+    
     <!-- Botones -->
     <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
         <a href="/inicio" class="btn btn-primary" style="min-width: 200px;">
