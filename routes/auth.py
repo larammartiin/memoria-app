@@ -50,3 +50,10 @@ def registro():
 def logout():
     logout_user()
     return redirect(url_for('auth.login'))
+
+from flask import send_from_directory
+import os
+
+@auth.route('/sw.js')
+def service_worker():
+    return send_from_directory(os.path.join(os.path.dirname(os.path.dirname(__file__))), 'sw.js', mimetype='application/javascript')

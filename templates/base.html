@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MemorIA - Ejercicios de memoria</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#4A90D9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MemorIA">
     <style>
         * {
             margin: 0;
@@ -138,6 +143,13 @@
         .mb-16 { margin-bottom: 16px; }
     </style>
 </head>
+<script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(() => console.log('Service Worker registrado'))
+                .catch(err => console.log('Error:', err));
+        }
+    </script>
 <body>
 
     {% if current_user.is_authenticated %}
