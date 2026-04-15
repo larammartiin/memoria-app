@@ -16,8 +16,8 @@ def load_user(user_id):
 def create_app():
     app = Flask(__name__)
     
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'clave_secreta_default')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///memoria.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
@@ -31,14 +31,16 @@ def create_app():
     app.register_blueprint(auth)
     app.register_blueprint(perfil)
     app.register_blueprint(juego)
-    
+
     app.jinja_env.globals['round'] = round
-    
+
     with app.app_context():
         db.create_all()
 
     return app
 
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=True)
+    
