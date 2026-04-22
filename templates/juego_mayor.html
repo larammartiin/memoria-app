@@ -127,13 +127,17 @@
 
         .btn-grande {
             width: 100%;
-            padding: 16px;
+            padding: 18px;
             font-size: 22px;
             font-weight: bold;
             border: none;
             border-radius: 16px;
             cursor: pointer;
             text-align: center;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-responder { background-color: #52C41A; color: white; }
@@ -228,15 +232,18 @@
             name="respuesta"
             id="respuesta"
             class="input-respuesta"
-            placeholder="Escribe aquí..."
+            placeholder="Escribe o habla aquí..."
             autocomplete="off"
-            autofocus
         >
+        
         <div class="botones">
+           <div class="botones">
+            <button type="button" id="btn-microfono" onclick="iniciarDictado()" class="btn-grande" style="background-color: #4A90D9; color: white;">
+                🎤 Pulsa para hablar
+            </button>
             <button type="submit" name="accion" value="responder" class="btn-grande btn-responder">
                 ✅ Responder
             </button>
-        <div class="botones">
             <button type="button" class="btn-grande" onclick="leerPregunta()" style="background-color: #7B68EE; color: white;">
                 🔊 Repetir pregunta
             </button>
@@ -246,6 +253,8 @@
             <button type="submit" name="accion" value="pasar" class="btn-grande btn-pasar">
                 ⏭️ Pasar
             </button>
+        </div>
+
         </div>
     </form>
 
@@ -262,26 +271,126 @@
         });
 
         // Leer la pregunta en voz alta automáticamente al cargar la página
-        function leerPregunta() {
+       function leerPregunta() {
             const indicacion = document.getElementById('texto-indicacion').textContent;
             const pregunta = document.getElementById('texto-pregunta').textContent;
-            const texto = indicacion + '. ' + pregunta;
 
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(texto);
-                utterance.lang = 'es-ES';
-                utterance.rate = 0.85;
-                utterance.pitch = 1;
-                utterance.volume = 1;
-                window.speechSynthesis.speak(utterance);
+
+                // Primera parte: indicación
+                const parte1 = new SpeechSynthesisUtterance(indicacion);
+                parte1.lang = 'es-ES';
+                parte1.rate = 0.8;
+                parte1.pitch = 1.1;
+                parte1.volume = 1;
+
+                // Pausa entre indicación y pregunta
+                const silencio = new SpeechSynthesisUtterance(' ');
+                silencio.lang = 'es-ES';
+                silencio.rate = 0.1;
+
+                // Segunda parte: pregunta
+                const parte2 = new SpeechSynthesisUtterance(pregunta);
+                parte2.lang = 'es-ES';
+                parte2.rate = 0.78;
+                parte2.pitch = 1.05;
+                parte2.volume = 1;
+
+                // Seleccionar la mejor voz española disponible
+                const voces = window.speechSynthesis.getVoices();
+                const vozEspanol = voces.find(v =>
+                    v.lang === 'es-ES' && v.localService === true
+                ) || voces.find(v =>
+                    v.lang.startsWith('es')
+                );
+
+                if (vozEspanol) {
+                    parte1.voice = vozEspanol;
+                    parte2.voice = vozEspanol;
+                }
+
+                window.speechSynthesis.speak(parte1);
+                window.speechSynthesis.speak(silencio);
+                window.speechSynthesis.speak(parte2);
+            }
+        }
+
+        // Cargar voces y leer cuando estén disponibles
+        function iniciarVoz() {
+            if ('speechSynthesis' in window) {
+                if (window.speechSynthesis.getVoices().length > 0) {
+                    setTimeout(leerPregunta, 800);
+                } else {
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        setTimeout(leerPregunta, 800);
+                    };
+                }
             }
         }
 
         // Leer automáticamente al cargar
-        window.addEventListener('load', () => {
-            setTimeout(leerPregunta, 500);
-        });
+        
+        window.addEventListener('load', iniciarVoz);
+
+    // Reconocimiento de voz
+        let reconocimiento = null;
+        let escuchando = false;
+
+        function iniciarDictado() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Safari.');
+                return;
+            }
+
+            if (escuchando) {
+                reconocimiento.stop();
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            reconocimiento = new SpeechRecognition();
+            reconocimiento.lang = 'es-ES';
+            reconocimiento.continuous = false;
+            reconocimiento.interimResults = false;
+
+            const btn = document.getElementById('btn-microfono');
+
+            reconocimiento.onstart = () => {
+                escuchando = true;
+                btn.style.backgroundColor = '#FF4D4F';
+                btn.textContent = '🔴 Escuchando... pulsa para parar';
+                window.speechSynthesis.cancel();
+            };
+
+            reconocimiento.onresult = (event) => {
+                const texto = event.results[0][0].transcript.toUpperCase();
+                document.getElementById('respuesta').value = texto;
+                btn.style.backgroundColor = '#52C41A';
+                btn.textContent = '✅ Dicho: ' + texto;
+            };
+
+            reconocimiento.onerror = (event) => {
+                btn.style.backgroundColor = '#4A90D9';
+                btn.textContent = '🎤 Pulsa para hablar';
+                escuchando = false;
+                if (event.error === 'not-allowed') {
+                    alert('Permite el acceso al micrófono para usar esta función.');
+                }
+            };
+
+            reconocimiento.onend = () => {
+                escuchando = false;
+                setTimeout(() => {
+                    if (btn.style.backgroundColor !== 'rgb(82, 196, 26)') {
+                        btn.style.backgroundColor = '#4A90D9';
+                        btn.textContent = '🎤 Pulsa para hablar';
+                    }
+                }, 2000);
+            };
+
+            reconocimiento.start();
+        }
     </script>
 
 </body>
