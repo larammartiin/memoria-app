@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_required, current_user
 from models.models import PerfilMayor
-from app import db
+from models.models import db
+
 
 perfil = Blueprint('perfil', __name__)
 

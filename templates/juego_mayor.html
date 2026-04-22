@@ -119,7 +119,10 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            padding: 16px 800px;
+            padding: 16px 32px;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
         }
 
         .btn-grande {
@@ -205,10 +208,10 @@
     <div class="letra-grande">{{ letra }}</div>
 
     <div class="indicacion-wrapper">
-        <span class="indicacion">{{ indicacion }}</span>
+        <span class="indicacion" id="texto-indicacion">{{ indicacion }}</span>
     </div>
 
-    <div class="pregunta">{{ pregunta }}</div>
+    <div class="pregunta" id="texto-pregunta">{{ pregunta }}</div>
 
     <div class="pista-box" id="pista-box">
         💡 {{ pista }}
@@ -233,6 +236,10 @@
             <button type="submit" name="accion" value="responder" class="btn-grande btn-responder">
                 ✅ Responder
             </button>
+        <div class="botones">
+            <button type="button" class="btn-grande" onclick="leerPregunta()" style="background-color: #7B68EE; color: white;">
+                🔊 Repetir pregunta
+            </button>
             <button type="button" class="btn-grande btn-pista" onclick="mostrarPista()">
                 💡 Ver pista
             </button>
@@ -246,11 +253,34 @@
         function mostrarPista() {
             document.getElementById('pista-box').style.display = 'block';
         }
+
         document.getElementById('respuesta').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 document.getElementById('formulario').querySelector('[value="responder"]').click();
             }
+        });
+
+        // Leer la pregunta en voz alta automáticamente al cargar la página
+        function leerPregunta() {
+            const indicacion = document.getElementById('texto-indicacion').textContent;
+            const pregunta = document.getElementById('texto-pregunta').textContent;
+            const texto = indicacion + '. ' + pregunta;
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(texto);
+                utterance.lang = 'es-ES';
+                utterance.rate = 0.85;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Leer automáticamente al cargar
+        window.addEventListener('load', () => {
+            setTimeout(leerPregunta, 500);
         });
     </script>
 
