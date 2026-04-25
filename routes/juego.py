@@ -536,3 +536,64 @@ def responder_mayor():
     session['letra_actual'] = letra_index + 1
 
     return redirect(url_for('juego.pregunta_mayor'))
+
+
+@juego.route('/ahorcado/<int:perfil_id>')
+@login_required
+def ahorcado(perfil_id):
+    p = PerfilMayor.query.get_or_404(perfil_id)
+    return render_template('ahorcado.html', perfil=p)
+
+
+@juego.route('/ahorcado/generar', methods=['POST'])
+@login_required
+def ahorcado_generar():
+    perfil_id = request.json.get('perfil_id')
+    p = PerfilMayor.query.get_or_404(perfil_id)
+
+    cliente = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+    datos = f"""
+    Nombre: {p.nombre}, Edad: {p.edad}, Ciudad natal: {p.ciudad_natal},
+    Pareja: {p.nombre_pareja}, Hijos: {p.nombres_hijos}, Nietos: {p.nombres_nietos},
+    Mejor amigo/a: {p.nombre_mejor_amigo}, Lugar de veraneo: {p.lugar_veraneo},
+    Viajes: {p.viajes_favoritos}, Aficiones: {p.aficiones},
+    Comida favorita: {p.comida_favorita}, Película favorita: {p.pelicula_favorita},
+    Mascota: {p.nombre_mascota}, Info adicional: {p.informacion_adicional}
+    """
+
+    respuesta = cliente.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": "Eres un experto en estimulación cognitiva para personas mayores. Responde ÚNICAMENTE con JSON válido, sin texto extra."
+            },
+            {
+                "role": "user",
+                "content": f"""Basándote en estos datos biográficos: {datos}
+
+Elige UNA palabra clave DIFERENTE cada vez de la vida de esta persona (máximo 10 letras, sin tildes, en mayúsculas).
+Puede ser un nombre de familiar, ciudad, afición, comida, mascota, viaje...
+Varía siempre la palabra elegida, no repitas siempre la misma.
+Genera una pista corta y cariñosa.
+
+Responde ÚNICAMENTE con este JSON exacto:
+{{"palabra": "PALABRA", "pista": "Frase de pista cariñosa"}}"""
+            }
+        ],
+        max_tokens=100,
+        temperature=0.9,
+        response_format={"type": "json_object"}
+    )
+
+    datos_json = json.loads(respuesta.choices[0].message.content)
+    palabra = datos_json['palabra'].upper().strip()
+    # Eliminar tildes
+    import unicodedata
+    palabra = ''.join(c for c in unicodedata.normalize('NFD', palabra) if unicodedata.category(c) != 'Mn')
+
+    return jsonify({
+        'palabra': palabra,
+        'pista': datos_json['pista']
+    })

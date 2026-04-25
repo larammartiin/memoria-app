@@ -4,7 +4,6 @@
 
 <div class="card text-center">
 
-    <!-- Emoji según puntuación -->
     <div style="font-size: 80px; margin-bottom: 16px;">
         {% if porcentaje >= 80 %}🏆
         {% elif porcentaje >= 60 %}⭐
@@ -13,73 +12,76 @@
     </div>
 
     <h1>¡Muy bien, {{ nombre_mayor }}!</h1>
-    <p style="color: #7F8C8D; font-size: 22px; margin-top: 8px;">
+    <p style="color: #8d6e63; font-size: 22px; margin-top: 8px;">
         Has completado el rosco de hoy
     </p>
 
-    <!-- Porcentaje grande -->
     <div style="
         font-size: 72px;
         font-weight: bold;
-        color: {% if porcentaje >= 80 %}#52C41A{% elif porcentaje >= 60 %}#4A90D9{% elif porcentaje >= 40 %}#FAAD14{% else %}#FF4D4F{% endif %};
+        color: {% if porcentaje >= 80 %}#81b88b{% elif porcentaje >= 60 %}#8d6e63{% elif porcentaje >= 40 %}#e6a817{% else %}#e07070{% endif %};
         margin: 32px 0;
     ">
         {{ porcentaje }}%
     </div>
 
-    <!-- Estadísticas -->
     <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px;">
 
         <div style="
-            background: #F6FFED;
-            border: 2px solid #52C41A;
+            background: #f0fff0;
+            border: 2px solid #81b88b;
             border-radius: 16px;
             padding: 20px 28px;
             min-width: 140px;
         ">
-            <div style="font-size: 42px; font-weight: bold; color: #52C41A;">{{ correctas }}</div>
-            <div style="font-size: 18px; color: #7F8C8D; margin-top: 4px;">✅ Correctas</div>
+            <div style="font-size: 42px; font-weight: bold; color: #81b88b;">{{ correctas }}</div>
+            <div style="font-size: 18px; color: #8d6e63; margin-top: 4px;">✅ Correctas</div>
         </div>
 
         <div style="
-            background: #FFF2F0;
-            border: 2px solid #FF4D4F;
+            background: #fff0f0;
+            border: 2px solid #e07070;
             border-radius: 16px;
             padding: 20px 28px;
             min-width: 140px;
         ">
-            <div style="font-size: 42px; font-weight: bold; color: #FF4D4F;">{{ incorrectas }}</div>
-            <div style="font-size: 18px; color: #7F8C8D; margin-top: 4px;">❌ Incorrectas</div>
+            <div style="font-size: 42px; font-weight: bold; color: #e07070;">{{ incorrectas }}</div>
+            <div style="font-size: 18px; color: #8d6e63; margin-top: 4px;">❌ Incorrectas</div>
         </div>
 
         <div style="
-            background: #FFFBE6;
-            border: 2px solid #FAAD14;
+            background: #fffbe6;
+            border: 2px solid #e6a817;
             border-radius: 16px;
             padding: 20px 28px;
             min-width: 140px;
         ">
-            <div style="font-size: 42px; font-weight: bold; color: #FAAD14;">{{ pasadas }}</div>
-            <div style="font-size: 18px; color: #7F8C8D; margin-top: 4px;">⏭️ Pasadas</div>
+            <div style="font-size: 42px; font-weight: bold; color: #e6a817;">{{ pasadas }}</div>
+            <div style="font-size: 18px; color: #8d6e63; margin-top: 4px;">⏭️ Pasadas</div>
         </div>
 
     </div>
 
-    <!-- Mensaje motivador personalizado -->
     <div style="
-        background: #F0F7FF;
-        border: 2px solid #4A90D9;
+        background: #fdf6f0;
+        border: 2px solid #c8956c;
         border-radius: 16px;
         padding: 20px;
         margin-bottom: 32px;
         font-size: 22px;
-        color: #2C3E50;
-        font-style: italic;
+        color: #5d4037;
     ">
-        💬 {{ mensaje_final }}
+        {% if porcentaje >= 80 %}
+            🌟 ¡Excelente trabajo! Tu memoria está en gran forma hoy.
+        {% elif porcentaje >= 60 %}
+            👍 ¡Muy buen resultado! Sigue practicando cada día.
+        {% elif porcentaje >= 40 %}
+            💪 ¡Buen esfuerzo! Cada día que practicas mejoras un poco más.
+        {% else %}
+            🤗 ¡Lo importante es participar! Mañana lo harás aún mejor.
+        {% endif %}
     </div>
-    
-    <!-- Botones -->
+
     <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
         <a href="/inicio" class="btn btn-primary" style="min-width: 200px;">
             🏠 Volver al inicio
