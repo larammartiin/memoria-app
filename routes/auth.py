@@ -17,7 +17,7 @@ def login():
             return render_template('login.html', error='Email o contraseña incorrectos')
         
         login_user(usuario)
-        return redirect(url_for('perfil.inicio'))
+        return redirect(url_for('perfil.seleccion_rol'))
     
     return render_template('login.html')
 
@@ -40,7 +40,7 @@ def registro():
         db.session.commit()
         
         login_user(nuevo_usuario)
-        return redirect(url_for('perfil.inicio'))
+        return redirect(url_for('perfil.seleccion_rol'))
     
     return render_template('registro.html')
 

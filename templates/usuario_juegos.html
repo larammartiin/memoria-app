@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="max-width: 500px; margin: 40px auto;">
+
+    <div class="card text-center" style="margin-bottom: 32px;">
+        <div style="font-size: 64px; margin-bottom: 16px;">🎮</div>
+        <h1>¡Hola, {{ perfil.nombre }}!</h1>
+        <p style="color: #8d6e63; margin-top: 8px; font-size: 20px;">
+            ¿A qué quieres jugar hoy?
+        </p>
+    </div>
+
+    <!-- Rosco de Recuerdos (modo mayor) -->
+    <a href="/juego/mayor/{{ perfil.id }}" style="
+        display: block;
+        background: #8d6e63;
+        border: 3px solid #8d6e63;
+        border-radius: 20px;
+        padding: 28px;
+        text-align: center;
+        text-decoration: none;
+        margin-bottom: 20px;
+    ">
+        <div style="font-size: 48px; margin-bottom: 12px;">🎯</div>
+        <div style="font-size: 26px; font-weight: bold; color: white; margin-bottom: 8px;">Rosco de Recuerdos</div>
+        <div style="font-size: 18px; color: #f0e6dc;">Adivina las letras con preguntas sobre tu vida</div>
+    </a>
+
+    <!-- Ahorcado -->
+    <a href="/ahorcado/{{ perfil.id }}" style="
+        display: block;
+        background: white;
+        border: 3px solid #c8956c;
+        border-radius: 20px;
+        padding: 28px;
+        text-align: center;
+        text-decoration: none;
+        margin-bottom: 32px;
+    ">
+        <div style="font-size: 48px; margin-bottom: 12px;">🔤</div>
+        <div style="font-size: 26px; font-weight: bold; color: #5d4037; margin-bottom: 8px;">Ahorcado de Recuerdos</div>
+        <div style="font-size: 18px; color: #8d6e63;">Adivina palabras de tu historia personal</div>
+    </a>
+
+    <div class="text-center">
+        <a href="/seleccion" style="color: #8d6e63; font-size: 18px; text-decoration: none;">← Volver</a>
+    </div>
+
+</div>
+
+{% endblock %}

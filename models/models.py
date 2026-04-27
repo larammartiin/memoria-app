@@ -62,6 +62,7 @@ class Sesion(db.Model):
     respuestas_incorrectas = db.Column(db.Integer, default=0)
     preguntas_pasadas = db.Column(db.Integer, default=0)
     tiempo_total = db.Column(db.Integer, default=0)
+    tipo_juego = db.Column(db.String(20), default='rosco')
 
     preguntas = db.relationship('Pregunta', backref='sesion', lazy=True)
 

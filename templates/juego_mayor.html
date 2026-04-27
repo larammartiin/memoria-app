@@ -174,6 +174,7 @@
 <body>
 
     <div class="cabecera">
+        <a href="/usuario/{{ perfil_id }}" style="color: white; text-decoration: none; font-size: 20px; font-weight: bold;">← Volver</a>
         <div class="cabecera-nombre">🧠 {{ nombre_mayor }}</div>
         <div class="cabecera-marcador">
             <span style="color: #90EE90;">✅ {{ correctas }}</span>
@@ -235,7 +236,7 @@
             placeholder="Escribe o habla aquí..."
             autocomplete="off"
         >
-        
+
         <div class="botones">
             <button type="button" class="btn-grande" onclick="leerPregunta()" style="background-color: #7B68EE; color: white;">
                 🔊 Repetir pregunta
@@ -253,8 +254,6 @@
                 ⏭️ Pasar
             </button>
         </div>
-
-        </div>
     </form>
 
     <script>
@@ -269,34 +268,29 @@
             }
         });
 
-        // Leer la pregunta en voz alta automáticamente al cargar la página
-       function leerPregunta() {
+        function leerPregunta() {
             const indicacion = document.getElementById('texto-indicacion').textContent;
             const pregunta = document.getElementById('texto-pregunta').textContent;
 
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
 
-                // Primera parte: indicación
                 const parte1 = new SpeechSynthesisUtterance(indicacion);
                 parte1.lang = 'es-ES';
                 parte1.rate = 0.8;
                 parte1.pitch = 1.1;
                 parte1.volume = 1;
 
-                // Pausa entre indicación y pregunta
                 const silencio = new SpeechSynthesisUtterance(' ');
                 silencio.lang = 'es-ES';
                 silencio.rate = 0.1;
 
-                // Segunda parte: pregunta
                 const parte2 = new SpeechSynthesisUtterance(pregunta);
                 parte2.lang = 'es-ES';
                 parte2.rate = 0.78;
                 parte2.pitch = 1.05;
                 parte2.volume = 1;
 
-                // Seleccionar la mejor voz española disponible
                 const voces = window.speechSynthesis.getVoices();
                 const vozEspanol = voces.find(v =>
                     v.lang === 'es-ES' && v.localService === true
@@ -315,7 +309,6 @@
             }
         }
 
-        // Cargar voces y leer cuando estén disponibles
         function iniciarVoz() {
             if ('speechSynthesis' in window) {
                 if (window.speechSynthesis.getVoices().length > 0) {
@@ -328,11 +321,8 @@
             }
         }
 
-        // Leer automáticamente al cargar
-        
         window.addEventListener('load', iniciarVoz);
 
-    // Reconocimiento de voz
         let reconocimiento = null;
         let escuchando = false;
 

@@ -83,8 +83,9 @@
     </div>
 
     <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-        <a href="/inicio" class="btn btn-primary" style="min-width: 200px;">
+        <a href="/usuario/{{ perfil_id }}" class="btn btn-primary" style="min-width: 200px;">
             🏠 Volver al inicio
+        </a>
         </a>
         <a href="/juego/{{ perfil_id if perfil_id else '' }}" class="btn btn-success" style="min-width: 200px;">
             🔄 Jugar otra vez

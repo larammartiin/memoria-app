@@ -7,7 +7,7 @@
         <div>
             <h1>👋 Hola, {{ current_user.nombre }}</h1>
             <p style="color: #8d6e63; margin-top: 8px;">
-                Aquí puedes gestionar los perfiles y empezar los ejercicios
+                Panel del responsable
             </p>
         </div>
         <a href="/perfil/nuevo" class="btn btn-primary">
@@ -20,28 +20,17 @@
 
     {% for p in perfiles %}
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h2>👴 {{ p.nombre }}</h2>
-                <p style="color: #8d6e63; margin-top: 6px;">
-                    {{ p.edad }} años
-                    {% if p.ciudad_natal %} · {{ p.ciudad_natal }}{% endif %}
-                    {% if p.aficiones %} · {{ p.aficiones }}{% endif %}
-                </p>
-            </div>
+        <div>
+            <h2>👴 {{ p.nombre }}</h2>
+            <p style="color: #8d6e63; margin-top: 6px;">
+                {{ p.edad }} años
+                {% if p.ciudad_natal %} · {{ p.ciudad_natal }}{% endif %}
+                {% if p.aficiones %} · {{ p.aficiones }}{% endif %}
+            </p>
         </div>
 
         <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
-            <a href="/juego/{{ p.id }}" class="btn btn-primary">
-                🎮 Jugar rosco
-            </a>
-            <a href="/juego/mayor/{{ p.id }}" class="btn btn-success">
-                👴 Modo mayor
-            </a>
-            <a href="/ahorcado/{{ p.id }}" class="btn btn-primary" style="background-color: #c8956c;">
-                🎯 Ahorcado
-            </a>
-            <a href="/historial/{{ p.id }}" class="btn btn-primary" style="background-color: #a1887f;">
+            <a href="/historial/{{ p.id }}" class="btn btn-primary">
                 📊 Historial
             </a>
             <a href="/perfil/editar/{{ p.id }}" class="btn btn-warning">
@@ -62,8 +51,7 @@
         <div style="font-size: 64px; margin-bottom: 16px;">👴</div>
         <h2>No hay perfiles todavía</h2>
         <p style="color: #8d6e63; margin: 16px 0;">
-            Añade el perfil de la persona mayor para empezar.<br>
-            Cuanta más información añadas, mejores serán los ejercicios.
+            Añade el perfil de la persona mayor para empezar.
         </p>
         <a href="/perfil/nuevo" class="btn btn-primary mt-16">
             + Añadir primer perfil

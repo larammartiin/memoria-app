@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="max-width: 500px; margin: 60px auto;">
+
+    <div class="card text-center" style="margin-bottom: 32px;">
+        <div style="font-size: 64px; margin-bottom: 16px;">🧠</div>
+        <h1>¡Hola, {{ nombre }}!</h1>
+        <p style="color: #8d6e63; margin-top: 8px; font-size: 20px;">
+            ¿Quién va a usar la app ahora?
+        </p>
+    </div>
+
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+
+        <!-- Botón responsable -->
+        <a href="/responsable/{{ perfil.id }}" style="
+            flex: 1;
+            min-width: 180px;
+            background: white;
+            border: 3px solid #8d6e63;
+            border-radius: 20px;
+            padding: 32px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        ">
+            <div style="font-size: 52px; margin-bottom: 12px;">👨‍👩‍👧</div>
+            <div style="font-size: 22px; font-weight: bold; color: #5d4037; margin-bottom: 8px;">Responsable</div>
+            <div style="font-size: 16px; color: #8d6e63;">Perfil, historial y configuración</div>
+        </a>
+
+        <!-- Botón usuario -->
+        <a href="/usuario/{{ perfil.id }}" style="
+            flex: 1;
+            min-width: 180px;
+            background: #8d6e63;
+            border: 3px solid #8d6e63;
+            border-radius: 20px;
+            padding: 32px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        ">
+            <div style="font-size: 52px; margin-bottom: 12px;">👴</div>
+            <div style="font-size: 22px; font-weight: bold; color: white; margin-bottom: 8px;">{{ perfil.nombre }}</div>
+            <div style="font-size: 16px; color: #f0e6dc;">Jugar directamente</div>
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

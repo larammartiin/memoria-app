@@ -38,7 +38,7 @@ def nuevo_perfil():
         )
         db.session.add(nuevo)
         db.session.commit()
-        return redirect(url_for('perfil.inicio'))
+        return redirect(url_for('perfil.seleccion_rol'))
 
     return render_template('perfil_form.html', perfil=None)
 
@@ -70,7 +70,7 @@ def editar_perfil(perfil_id):
         p.informacion_adicional = request.form.get('informacion_adicional')
 
         db.session.commit()
-        return redirect(url_for('perfil.inicio'))
+        return redirect(url_for('perfil.seleccion_rol'))
 
     return render_template('perfil_form.html', perfil=p)
 
@@ -98,18 +98,54 @@ def historial(perfil_id):
     if p.familiar_id != current_user.id:
         return redirect(url_for('perfil.inicio'))
 
-    # Todas las sesiones ordenadas por fecha
     sesiones = Sesion.query.filter_by(perfil_id=perfil_id).order_by(Sesion.fecha.desc()).all()
+    from datetime import timezone, timedelta
+    zona_espana = timedelta(hours=2)
+    for s in sesiones:
+        s.fecha = s.fecha + zona_espana
 
-    # Datos para la gráfica (últimas 10 sesiones)
-    ultimas = sesiones[:10][::-1]
-    grafica_fechas = [s.fecha.strftime('%d/%m') for s in ultimas]
+    # Separar sesiones por tipo
+    sesiones_rosco = [s for s in sesiones if s.tipo_juego == 'rosco']
+    sesiones_ahorcado = [s for s in sesiones if s.tipo_juego == 'ahorcado']
+
+    # Agrupar ahorcado por día
+    from collections import defaultdict
+    ahorcado_por_dia = defaultdict(lambda: {'correctas': 0, 'incorrectas': 0, 'total': 0, 'fecha': None})
+    for s in sesiones_ahorcado:
+        dia = s.fecha.date().strftime('%Y-%m-%d')
+        ahorcado_por_dia[dia]['correctas'] += s.respuestas_correctas
+        ahorcado_por_dia[dia]['incorrectas'] += s.respuestas_incorrectas
+        ahorcado_por_dia[dia]['total'] += 1
+        ahorcado_por_dia[dia]['fecha'] = s.fecha
+
+    # Convertir a lista ordenada
+    ahorcado_agrupado = sorted(
+        [{'dia': dia, **datos} for dia, datos in ahorcado_por_dia.items()],
+        key=lambda x: x['dia'],
+        reverse=True
+    )
+
+    # Datos para la gráfica — agrupar por día todos los juegos
+    from collections import defaultdict
+    datos_por_dia = defaultdict(lambda: {'correctas': 0, 'total': 0})
+    for s in sesiones:
+        dia = s.fecha.strftime('%d/%m')
+        datos_por_dia[dia]['correctas'] += s.respuestas_correctas
+        datos_por_dia[dia]['total'] += s.total_preguntas if s.total_preguntas > 0 else 1
+
+    from datetime import datetime as dt
+    dias_ordenados = sorted(datos_por_dia.keys(), key=lambda d: dt.strptime(d, '%d/%m'))
+    ultimos_dias = dias_ordenados[-10:]
+
+    grafica_fechas = ultimos_dias
     grafica_porcentajes = [
-        round((s.respuestas_correctas / s.total_preguntas * 100)) if s.total_preguntas > 0 else 0
-        for s in ultimas
+        round((datos_por_dia[dia]['correctas'] / datos_por_dia[dia]['total']) * 100)
+        if datos_por_dia[dia]['total'] > 0 else 0
+        for dia in ultimos_dias
     ]
 
     # Calendario últimos 30 días
+    from datetime import datetime, timedelta
     hoy = datetime.utcnow().date()
     calendario = {}
     for i in range(30):
@@ -129,15 +165,14 @@ def historial(perfil_id):
     total_preguntas_semana = sum(s.total_preguntas for s in sesiones_semana)
     porcentaje_semana = round((correctas_semana / total_preguntas_semana * 100)) if total_preguntas_semana > 0 else 0
 
-    # Mejor sesión
-    mejor_sesion = None
-    if sesiones:
-        sesiones_validas = [s for s in sesiones if s.total_preguntas > 0]
-        mejor_sesion = max(sesiones_validas, key=lambda s: s.respuestas_correctas / s.total_preguntas) if sesiones_validas else None
-        
+    # Mejor sesión rosco
+    sesiones_validas = [s for s in sesiones_rosco if s.total_preguntas > 0]
+    mejor_sesion = max(sesiones_validas, key=lambda s: s.respuestas_correctas / s.total_preguntas) if sesiones_validas else None
+
     return render_template('historial.html',
         perfil=p,
-        sesiones=sesiones,
+        sesiones=sesiones_rosco,
+        ahorcado_agrupado=ahorcado_agrupado,
         grafica_fechas=grafica_fechas,
         grafica_porcentajes=grafica_porcentajes,
         calendario=calendario,
@@ -148,3 +183,26 @@ def historial(perfil_id):
         mejor_sesion=mejor_sesion,
         hoy=hoy,
     )
+@perfil.route('/seleccion')
+@login_required
+def seleccion_rol():
+    perfiles = PerfilMayor.query.filter_by(familiar_id=current_user.id).all()
+    if not perfiles:
+        return redirect(url_for('perfil.nuevo_perfil'))
+    if len(perfiles) == 1:
+        return render_template('seleccion_rol.html', perfil=perfiles[0], nombre=current_user.nombre)
+    return render_template('seleccion_rol.html', perfil=perfiles[0], nombre=current_user.nombre)
+
+
+@perfil.route('/responsable/<int:perfil_id>')
+@login_required
+def responsable(perfil_id):
+    p = PerfilMayor.query.get_or_404(perfil_id)
+    return render_template('inicio.html', perfiles=[p])
+
+
+@perfil.route('/usuario/<int:perfil_id>')
+@login_required
+def usuario(perfil_id):
+    p = PerfilMayor.query.get_or_404(perfil_id)
+    return render_template('usuario_juegos.html', perfil=p)

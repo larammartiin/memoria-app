@@ -5,6 +5,7 @@ from models.models import db
 from openai import OpenAI
 import os
 import json
+import math
 
 juego = Blueprint('juego', __name__)
 
@@ -14,16 +15,6 @@ LETRAS = ['A','B','C','D','E','F','G','H','I','J','K','L','M',
 def generar_pregunta_ia(perfil, letra, preguntas_usadas):
     cliente = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-    # Construir diccionario de datos reales del perfil
-    datos_perfil = {
-        'A': [],
-        'B': [], 'C': [], 'D': [], 'E': [], 'F': [], 'G': [],
-        'H': [], 'I': [], 'J': [], 'K': [], 'L': [], 'M': [],
-        'N': [], 'O': [], 'P': [], 'Q': [], 'R': [], 'S': [],
-        'T': [], 'U': [], 'V': [], 'W': [], 'X': [], 'Y': [], 'Z': []
-    }
-
-    # Lista plana de todos los datos del perfil con su contexto
     datos_concretos = []
 
     if perfil.nombre_pareja:
@@ -63,7 +54,6 @@ def generar_pregunta_ia(perfil, letra, preguntas_usadas):
     if perfil.informacion_adicional:
         datos_concretos.append(perfil.informacion_adicional)
 
-    # Filtrar datos cuya respuesta contiene la letra buscada
     datos_con_letra = []
     for dato in datos_concretos:
         palabras = dato.split()
@@ -77,7 +67,6 @@ def generar_pregunta_ia(perfil, letra, preguntas_usadas):
     if preguntas_usadas:
         historial = f"NO repitas estas preguntas ya hechas:\n" + "\n".join(f"- {p}" for p in preguntas_usadas)
 
-    contexto_letra = ""
     if datos_con_letra:
         contexto_letra = f"""
 DATOS DEL PERFIL RELACIONADOS CON LA LETRA "{letra}":
@@ -120,7 +109,7 @@ Responde ÚNICAMENTE con este JSON exacto:
             {
                 "role": "system",
                 "content": f"""Eres un asistente que genera preguntas de memoria personalizadas.
-REGLA ABSOLUTA: Si se te proporcionan datos del perfil para una letra, la respuesta SIEMPRE debe ser exactamente uno de esos datos reales. 
+REGLA ABSOLUTA: Si se te proporcionan datos del perfil para una letra, la respuesta SIEMPRE debe ser exactamente uno de esos datos reales.
 NUNCA inventes datos. NUNCA uses información que no esté en el perfil.
 Si no hay datos del perfil para esa letra, genera cultura general sencilla."""
             },
@@ -139,96 +128,17 @@ Si no hay datos del perfil para esa letra, genera cultura general sencilla."""
 
 
 def generar_mensaje_motivador(perfil, tipo, correctas=0, incorrectas=0, pasadas=0, total=0):
-    cliente = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+    porcentaje = round((correctas / total * 100)) if total > 0 else 0
 
-    if tipo == 'inicio':
-        prompt = f"""Eres un asistente cálido y motivador para personas mayores.
-
-Genera un mensaje de bienvenida corto y afectuoso (máximo 3 frases) para {perfil.nombre} que va a hacer sus ejercicios de memoria.
-Usa información personal para hacerlo más cercano:
-- Aficiones: {perfil.aficiones}
-- Familia: hijos ({perfil.nombres_hijos}), nietos ({perfil.nombres_nietos})
-- Lugar favorito: {perfil.lugar_veraneo}
-
-El mensaje debe ser cálido, motivador y natural. Como si fuera un amigo cercano.
-Responde ÚNICAMENTE con el texto del mensaje, sin comillas ni explicaciones."""
-
+    if porcentaje >= 80:
+        return f"¡Excelente trabajo, {perfil.nombre}! Tu memoria está en gran forma hoy. 🌟"
+    elif porcentaje >= 60:
+        return f"¡Muy bien, {perfil.nombre}! Sigue practicando cada día. 👍"
+    elif porcentaje >= 40:
+        return f"¡Buen esfuerzo, {perfil.nombre}! Cada día que practicas mejoras un poco más. 💪"
     else:
-        porcentaje = round((correctas / total * 100)) if total > 0 else 0
-        prompt = f"""Eres un asistente cálido y motivador para personas mayores.
+        return f"¡Lo importante es participar, {perfil.nombre}! Mañana lo harás aún mejor. 🤗"
 
-Genera un mensaje de felicitación corto y afectuoso (máximo 3 frases) para {perfil.nombre} que acaba de terminar sus ejercicios de memoria.
-Resultados: {correctas} correctas de {total} preguntas ({porcentaje}%).
-
-El mensaje debe:
-- Felicitarle por haber jugado
-- Mencionar algo positivo de su resultado
-- Animarle a seguir practicando mañana
-- Ser muy cálido y cercano
-
-Responde ÚNICAMENTE con el texto del mensaje, sin comillas ni explicaciones."""
-
-    respuesta = cliente.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=150,
-    )
-
-    return respuesta.choices[0].message.content.strip()
-@juego.route('/juego/bienvenida/<int:perfil_id>')
-@login_required
-def bienvenida(perfil_id):
-    from datetime import datetime
-    from models.models import Sesion
-
-    p = PerfilMayor.query.get_or_404(perfil_id)
-
-    mensaje = generar_mensaje_motivador(p, 'inicio')
-
-    ultima_sesion = Sesion.query.filter_by(perfil_id=perfil_id)\
-        .order_by(Sesion.fecha.desc()).first()
-
-    dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
-    meses = ['enero','febrero','marzo','abril','mayo','junio',
-             'julio','agosto','septiembre','octubre','noviembre','diciembre']
-    hoy = datetime.now()
-    fecha_hoy = f"{dias[hoy.weekday()]}, {hoy.day} de {meses[hoy.month-1]} de {hoy.year}"
-
-    return render_template('bienvenida.html',
-        nombre_mayor=p.nombre,
-        mensaje=mensaje,
-        fecha_hoy=fecha_hoy,
-        ultima_sesion=ultima_sesion,
-        url_juego=url_for('juego.iniciar_juego', perfil_id=perfil_id),
-    )
-
-
-@juego.route('/juego/bienvenida_mayor/<int:perfil_id>')
-@login_required
-def bienvenida_mayor(perfil_id):
-    from datetime import datetime
-    from models.models import Sesion
-
-    p = PerfilMayor.query.get_or_404(perfil_id)
-
-    mensaje = generar_mensaje_motivador(p, 'inicio')
-
-    ultima_sesion = Sesion.query.filter_by(perfil_id=perfil_id)\
-        .order_by(Sesion.fecha.desc()).first()
-
-    dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
-    meses = ['enero','febrero','marzo','abril','mayo','junio',
-             'julio','agosto','septiembre','octubre','noviembre','diciembre']
-    hoy = datetime.now()
-    fecha_hoy = f"{dias[hoy.weekday()]}, {hoy.day} de {meses[hoy.month-1]} de {hoy.year}"
-
-    return render_template('bienvenida.html',
-        nombre_mayor=p.nombre,
-        mensaje=mensaje,
-        fecha_hoy=fecha_hoy,
-        ultima_sesion=ultima_sesion,
-        url_juego=url_for('juego.iniciar_juego_mayor', perfil_id=perfil_id),
-    )
 
 @juego.route('/juego/<int:perfil_id>')
 @login_required
@@ -239,13 +149,6 @@ def iniciar_juego(perfil_id):
     db.session.add(nueva_sesion)
     db.session.commit()
 
-    session['sesion_id'] = nueva_sesion.id
-    session['perfil_id'] = perfil_id
-    session['letra_actual'] = 0
-    session['correctas'] = 0
-    session['incorrectas'] = 0
-    session['pasadas'] = 0
-    session['preguntas_usadas'] = []
     session.pop('sesion_id', None)
     session.pop('perfil_id', None)
     session.pop('letra_actual', None)
@@ -286,7 +189,6 @@ def pregunta():
     session['pregunta_actual'] = datos
     session['letra_actual_texto'] = letra
 
-    import math
     posiciones = []
     total = len(LETRAS)
     for i, l in enumerate(LETRAS):
@@ -315,7 +217,6 @@ def pregunta():
         letras=LETRAS,
         posiciones=posiciones,
     )
-
 
 
 @juego.route('/juego/responder', methods=['POST'])
@@ -398,6 +299,7 @@ def resultado():
         mensaje_final=mensaje_final,
     )
 
+
 @juego.route('/juego/mayor/<int:perfil_id>')
 @login_required
 def iniciar_juego_mayor(perfil_id):
@@ -407,13 +309,6 @@ def iniciar_juego_mayor(perfil_id):
     db.session.add(nueva_sesion)
     db.session.commit()
 
-    session['sesion_id'] = nueva_sesion.id
-    session['perfil_id'] = perfil_id
-    session['letra_actual'] = 0
-    session['correctas'] = 0
-    session['incorrectas'] = 0
-    session['pasadas'] = 0
-    session['preguntas_usadas'] = []
     session.pop('sesion_id', None)
     session.pop('perfil_id', None)
     session.pop('letra_actual', None)
@@ -432,7 +327,7 @@ def iniciar_juego_mayor(perfil_id):
     session['incorrectas'] = 0
     session['pasadas'] = 0
     session['preguntas_usadas'] = []
-    
+    session['estados_letras'] = ['pendiente'] * len(LETRAS)
 
     return redirect(url_for('juego.pregunta_mayor'))
 
@@ -455,7 +350,6 @@ def pregunta_mayor():
     session['pregunta_actual'] = datos
     session['letra_actual_texto'] = letra
 
-    import math
     posiciones = []
     estados = session.get('estados_letras', ['pendiente'] * len(LETRAS))
     for i, l in enumerate(LETRAS):
@@ -480,6 +374,7 @@ def pregunta_mayor():
         pasadas=session.get('pasadas', 0),
         nombre_mayor=p.nombre,
         posiciones=posiciones,
+        perfil_id=perfil_id,
     )
 
 
@@ -573,10 +468,15 @@ def ahorcado_generar():
                 "role": "user",
                 "content": f"""Basándote en estos datos biográficos: {datos}
 
-Elige UNA palabra clave DIFERENTE cada vez de la vida de esta persona (máximo 10 letras, sin tildes, en mayúsculas).
-Puede ser un nombre de familiar, ciudad, afición, comida, mascota, viaje...
-Varía siempre la palabra elegida, no repitas siempre la misma.
-Genera una pista corta y cariñosa.
+Elige UNA palabra clave ALEATORIA de la vida de esta persona (máximo 10 letras, sin tildes, en mayúsculas).
+REGLAS ESTRICTAS:
+- NUNCA uses el nombre de la persona ({p.nombre.split()[0]})
+- Cada vez que se llame esta función elige una palabra DIFERENTE
+- Rota entre estas categorías: nombres de familiares, ciudades visitadas, aficiones, comidas, mascotas, películas, trabajos, recuerdos especiales
+- No repitas la misma palabra dos veces seguidas
+- Si hay varios datos en una categoría elige uno distinto cada vez
+
+Genera una pista corta y cariñosa que ayude a recordar sin revelar directamente la palabra.
 
 Responde ÚNICAMENTE con este JSON exacto:
 {{"palabra": "PALABRA", "pista": "Frase de pista cariñosa"}}"""
@@ -589,7 +489,6 @@ Responde ÚNICAMENTE con este JSON exacto:
 
     datos_json = json.loads(respuesta.choices[0].message.content)
     palabra = datos_json['palabra'].upper().strip()
-    # Eliminar tildes
     import unicodedata
     palabra = ''.join(c for c in unicodedata.normalize('NFD', palabra) if unicodedata.category(c) != 'Mn')
 
@@ -597,3 +496,24 @@ Responde ÚNICAMENTE con este JSON exacto:
         'palabra': palabra,
         'pista': datos_json['pista']
     })
+
+
+@juego.route('/ahorcado/resultado', methods=['POST'])
+@login_required
+def ahorcado_resultado():
+    datos = request.json
+    perfil_id = datos.get('perfil_id')
+    ganado = datos.get('ganado')
+
+    nueva_sesion = Sesion(
+        perfil_id=perfil_id,
+        total_preguntas=1,
+        respuestas_correctas=1 if ganado else 0,
+        respuestas_incorrectas=0 if ganado else 1,
+        preguntas_pasadas=0,
+        tipo_juego='ahorcado'
+    )
+    db.session.add(nueva_sesion)
+    db.session.commit()
+
+    return jsonify({'ok': True})

@@ -106,12 +106,13 @@
 <!-- Historial de sesiones -->
 <div class="card">
     <h2>🕐 Sesiones anteriores</h2>
-    {% if sesiones %}
+    {% if sesiones or ahorcado_agrupado %}
     <div style="overflow-x: auto;">
         <table style="width: 100%; border-collapse: collapse; font-size: 18px;">
             <thead>
                 <tr style="border-bottom: 2px solid #f0e6dc;">
                     <th style="padding: 12px; text-align: left; color: #8d6e63;">Fecha</th>
+                    <th style="padding: 12px; text-align: center; color: #8d6e63;">Juego</th>
                     <th style="padding: 12px; text-align: center; color: #8d6e63;">✅ Correctas</th>
                     <th style="padding: 12px; text-align: center; color: #8d6e63;">❌ Incorrectas</th>
                     <th style="padding: 12px; text-align: center; color: #8d6e63;">⏭️ Pasadas</th>
@@ -123,6 +124,7 @@
                 {% set pct = (s.respuestas_correctas / s.total_preguntas * 100) | int if s.total_preguntas > 0 else 0 %}
                 <tr style="border-bottom: 1px solid #f0e6dc;">
                     <td style="padding: 12px;">{{ s.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td style="padding: 12px; text-align: center;">🎮 Rosco</td>
                     <td style="padding: 12px; text-align: center; color: #81b88b; font-weight: bold;">{{ s.respuestas_correctas }}</td>
                     <td style="padding: 12px; text-align: center; color: #e07070; font-weight: bold;">{{ s.respuestas_incorrectas }}</td>
                     <td style="padding: 12px; text-align: center; color: #e6a817; font-weight: bold;">{{ s.preguntas_pasadas }}</td>
@@ -139,7 +141,27 @@
                     </td>
                 </tr>
                 {% endfor %}
-            </tbody>
+                {% for a in ahorcado_agrupado %}
+                {% set pct_ahorcado = ((a.correctas / a.total) * 100) | int if a.total > 0 else 0 %}
+                <tr style="border-bottom: 1px solid #f0e6dc;">
+                    <td style="padding: 12px;">{{ a.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td style="padding: 12px; text-align: center;">🎯 Ahorcado</td>
+                    <td style="padding: 12px; text-align: center; color: #81b88b; font-weight: bold;">{{ a.correctas }}</td>
+                    <td style="padding: 12px; text-align: center; color: #e07070; font-weight: bold;">{{ a.incorrectas }}</td>
+                    <td style="padding: 12px; text-align: center; color: #8d6e63; font-weight: bold;">{{ a.total }}</td>
+                    <td style="padding: 12px; text-align: center;">
+                        <span style="
+                            background: {% if pct_ahorcado >= 80 %}#f0fff0{% elif pct_ahorcado >= 60 %}#fdf6f0{% else %}#fffbe6{% endif %};
+                            color: {% if pct_ahorcado >= 80 %}#81b88b{% elif pct_ahorcado >= 60 %}#c8956c{% else %}#e6a817{% endif %};
+                            padding: 4px 12px;
+                            border-radius: 999px;
+                            font-weight: bold;
+                        ">
+                            {{ pct_ahorcado }}%
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
         </table>
     </div>
     {% else %}
