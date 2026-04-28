@@ -189,9 +189,7 @@ def seleccion_rol():
     perfiles = PerfilMayor.query.filter_by(familiar_id=current_user.id).all()
     if not perfiles:
         return redirect(url_for('perfil.nuevo_perfil'))
-    if len(perfiles) == 1:
-        return render_template('seleccion_rol.html', perfil=perfiles[0], nombre=current_user.nombre)
-    return render_template('seleccion_rol.html', perfil=perfiles[0], nombre=current_user.nombre)
+    return render_template('seleccion_rol.html', perfiles=perfiles, nombre=current_user.nombre)
 
 
 @perfil.route('/responsable/<int:perfil_id>')
