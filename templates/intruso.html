@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Intruso</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fdfaf6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #4a3728;
+        }
+
+        .cabecera {
+            background-color: #8d6e63;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 24px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #f0e6dc;
+            border-top-color: #8d6e63;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .cargando {
+            text-align: center;
+            padding: 48px;
+            font-size: 22px;
+            color: #8d6e63;
+        }
+
+        .contador {
+            font-size: 16px;
+            color: #8d6e63;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .tema-label {
+            font-size: 20px;
+            color: #c8956c;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .pregunta-texto {
+            font-size: 24px;
+            font-weight: bold;
+            color: #5d4037;
+            margin-bottom: 28px;
+            line-height: 1.4;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .opcion-card {
+            padding: 28px 16px;
+            border-radius: 16px;
+            border: 2px solid #f0e6dc;
+            background: #fdfaf6;
+            font-size: 20px;
+            font-weight: bold;
+            color: #4a3728;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .opcion-card:hover:not(:disabled) {
+            background: #fdf6f0;
+            border-color: #8d6e63;
+            transform: translateY(-2px);
+        }
+
+        .opcion-card.correcta {
+            background: #f0fff0;
+            border-color: #81b88b;
+            color: #3a7d44;
+        }
+
+        .opcion-card.incorrecta {
+            background: #fff0f0;
+            border-color: #e07070;
+            color: #c0392b;
+        }
+
+        .opcion-card:disabled { cursor: default; transform: none; }
+
+        .feedback-box {
+            border-radius: 16px;
+            padding: 20px;
+            font-size: 18px;
+            color: #5d4037;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .feedback-correcto { background: #f0fff0; border: 2px solid #81b88b; }
+        .feedback-incorrecto { background: #fff0f0; border: 2px solid #e07070; }
+
+        .btn {
+            display: block;
+            padding: 16px 32px;
+            border-radius: 16px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            text-align: center;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .btn-principal { background-color: #8d6e63; color: white; }
+        .btn-siguiente { background-color: #81b88b; color: white; }
+        .btn:hover { opacity: 0.85; }
+
+        .volver {
+            color: #8d6e63;
+            text-decoration: none;
+            font-size: 16px;
+            margin-top: 16px;
+            display: block;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cabecera">
+        <a href="/usuario/{{ perfil.id }}" style="color: white; text-decoration: none; font-size: 20px; font-weight: bold;">← Volver</a>
+        <span style="color: white; font-size: 24px; font-weight: bold;">🕵️ El Intruso</span>
+        <span style="color: white; font-size: 20px;">{{ perfil.nombre }}</span>
+    </div>
+
+    <!-- Cargando -->
+    <div id="estado-cargando" class="card cargando">
+        <div class="spinner"></div>
+        Preparando los retos...
+    </div>
+
+    <!-- Juego -->
+    <div id="estado-juego" style="display:none; width:100%; max-width:600px; padding: 0 24px;">
+
+        <div class="card">
+            <div class="contador" id="contador-texto">Reto 1 de 4</div>
+            <div class="tema-label" id="tema-label"></div>
+            <div class="pregunta-texto">¿Cuál de estos NO pertenece a tu historia?</div>
+            <div class="grid" id="grid-opciones"></div>
+            <div class="feedback-box" id="feedback" style="display:none;"></div>
+            <button class="btn btn-siguiente" id="btn-siguiente" style="display:none;" onclick="siguienteRonda()">
+                Continuar →
+            </button>
+        </div>
+
+        <a href="/usuario/{{ perfil.id }}" class="volver">← Volver a los juegos</a>
+    </div>
+
+    <!-- Resultado -->
+    <div id="estado-resultado" style="display:none; width:100%; max-width:600px; padding: 0 24px;">
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 64px; margin-bottom: 16px;">🌟</div>
+            <h1 style="color: #5d4037; margin-bottom: 16px;">¡Objetivo cumplido!</h1>
+            <p style="color: #8d6e63; font-size: 20px; margin-bottom: 24px;">
+                Has demostrado conocer tu historia a la perfección.
+            </p>
+            <div style="font-size: 48px; font-weight: bold; color: #8d6e63; margin-bottom: 24px;" id="resultado-puntos"></div>
+            <button class="btn btn-principal" onclick="reiniciar()">🔄 Jugar otra vez</button>
+            <a href="/usuario/{{ perfil.id }}" class="volver">← Volver a los juegos</a>
+        </div>
+    </div>
+
+    <script>
+        const perfilId = {{ perfil.id }};
+        let rondas = [];
+        let indice = 0;
+        let correctas = 0;
+        let respondido = false;
+
+        async function cargarRondas() {
+            try {
+                const res = await fetch('/intruso/generar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ perfil_id: perfilId })
+                });
+                const datos = await res.json();
+                rondas = datos.rondas;
+
+                rondas = rondas.map(r => ({
+                    ...r,
+                    elementos: r.elementos.sort(() => Math.random() - 0.5)
+                }));
+
+                document.getElementById('estado-cargando').style.display = 'none';
+                document.getElementById('estado-juego').style.display = 'block';
+
+                mostrarRonda();
+            } catch (e) {
+                document.getElementById('estado-cargando').innerHTML = '❌ Error al generar el juego. <a href="/usuario/' + perfilId + '">Volver</a>';
+            }
+        }
+
+        function mostrarRonda() {
+            respondido = false;
+            const r = rondas[indice];
+
+            document.getElementById('contador-texto').textContent = `Reto ${indice + 1} de ${rondas.length}`;
+            document.getElementById('tema-label').textContent = `Tema: ${r.tema}`;
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('btn-siguiente').style.display = 'none';
+
+            const grid = document.getElementById('grid-opciones');
+            grid.innerHTML = '';
+
+            r.elementos.forEach(elemento => {
+                const btn = document.createElement('button');
+                btn.className = 'opcion-card';
+                btn.textContent = elemento;
+                btn.onclick = () => seleccionar(elemento);
+                grid.appendChild(btn);
+            });
+        }
+
+        function seleccionar(elemento) {
+            if (respondido) return;
+            respondido = true;
+
+            const r = rondas[indice];
+            const esCorrecto = elemento === r.intruso;
+            const botones = document.querySelectorAll('.opcion-card');
+
+            botones.forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent === r.intruso) btn.classList.add('correcta');
+                else if (btn.textContent === elemento && !esCorrecto) btn.classList.add('incorrecta');
+            });
+
+            if (esCorrecto) correctas++;
+
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback-box ' + (esCorrecto ? 'feedback-correcto' : 'feedback-incorrecto');
+            feedback.textContent = esCorrecto
+                ? '✅ ' + r.refuerzo
+                : '❌ No es ese. El intruso era: ' + r.intruso;
+            feedback.style.display = 'block';
+            document.getElementById('btn-siguiente').style.display = 'block';
+
+            if (indice === rondas.length - 1) {
+                document.getElementById('btn-siguiente').textContent = '🏆 Ver resultados';
+            }
+        }
+
+        function siguienteRonda() {
+            indice++;
+            if (indice < rondas.length) {
+                mostrarRonda();
+            } else {
+                mostrarResultado();
+            }
+        }
+
+        async function mostrarResultado() {
+            document.getElementById('estado-juego').style.display = 'none';
+            document.getElementById('estado-resultado').style.display = 'block';
+            document.getElementById('resultado-puntos').textContent = `${correctas} / ${rondas.length}`;
+
+            await fetch('/intruso/resultado', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ perfil_id: perfilId, correctas: correctas, total: rondas.length })
+            });
+        }
+
+        function reiniciar() {
+            indice = 0;
+            correctas = 0;
+            rondas = [];
+            document.getElementById('estado-resultado').style.display = 'none';
+            document.getElementById('estado-cargando').style.display = 'block';
+            cargarRondas();
+        }
+
+        cargarRondas();
+    </script>
+
+</body>
+</html>

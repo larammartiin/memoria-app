@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivial de Recuerdos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fdfaf6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #4a3728;
+        }
+
+        .cabecera {
+            background-color: #8d6e63;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 24px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #f0e6dc;
+            border-top-color: #8d6e63;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .cargando {
+            text-align: center;
+            padding: 48px;
+            font-size: 22px;
+            color: #8d6e63;
+        }
+
+        .progreso-barra {
+            height: 12px;
+            background: #f0e6dc;
+            border-radius: 999px;
+            margin-bottom: 8px;
+        }
+
+        .progreso-fill {
+            height: 12px;
+            background: #8d6e63;
+            border-radius: 999px;
+            transition: width 0.3s;
+        }
+
+        .pregunta-texto {
+            font-size: 24px;
+            font-weight: bold;
+            color: #5d4037;
+            text-align: center;
+            margin-bottom: 32px;
+            line-height: 1.4;
+        }
+
+        .opciones {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .opcion {
+            padding: 18px 24px;
+            border-radius: 16px;
+            border: 2px solid #f0e6dc;
+            background: #fdfaf6;
+            font-size: 20px;
+            color: #4a3728;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .opcion:hover:not(:disabled) {
+            background: #fdf6f0;
+            border-color: #8d6e63;
+        }
+
+        .opcion.correcta {
+            background: #f0fff0;
+            border-color: #81b88b;
+            color: #3a7d44;
+        }
+
+        .opcion.incorrecta {
+            background: #fff0f0;
+            border-color: #e07070;
+            color: #c0392b;
+        }
+
+        .opcion:disabled { cursor: default; }
+
+        .explicacion {
+            background: #fdf6f0;
+            border: 2px solid #c8956c;
+            border-radius: 16px;
+            padding: 20px;
+            font-size: 18px;
+            color: #5d4037;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .btn {
+            display: block;
+            padding: 16px 32px;
+            border-radius: 16px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            text-align: center;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .btn-principal { background-color: #8d6e63; color: white; }
+        .btn-siguiente { background-color: #81b88b; color: white; }
+        .btn:hover { opacity: 0.85; }
+
+        .marcador {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            color: #8d6e63;
+            margin-bottom: 8px;
+        }
+
+        .resultado-puntos {
+            font-size: 64px;
+            font-weight: bold;
+            color: #8d6e63;
+            text-align: center;
+            margin: 24px 0;
+        }
+
+        .volver {
+            color: #8d6e63;
+            text-decoration: none;
+            font-size: 16px;
+            margin-top: 16px;
+            display: block;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cabecera">
+        <a href="/usuario/{{ perfil.id }}" style="color: white; text-decoration: none; font-size: 20px; font-weight: bold;">← Volver</a>
+        <span style="color: white; font-size: 24px; font-weight: bold;">🎯 Trivial de Recuerdos</span>
+        <span style="color: white; font-size: 20px;">{{ perfil.nombre }}</span>
+    </div>
+
+    <!-- Cargando -->
+    <div id="estado-cargando" class="card cargando">
+        <div class="spinner"></div>
+        Preparando tu trivial personalizado...
+    </div>
+
+    <!-- Juego -->
+    <div id="estado-juego" style="display:none; width:100%; max-width:600px; padding: 0 24px;">
+
+        <div class="card">
+            <div class="marcador">
+                <span id="marcador-pregunta">Pregunta 1 de 5</span>
+                <span id="marcador-puntos" style="color: #81b88b; font-weight: bold;">Puntos: 0</span>
+            </div>
+            <div class="progreso-barra">
+                <div id="progreso-fill" class="progreso-fill" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="pregunta-texto" id="pregunta-texto"></div>
+            <div class="opciones" id="opciones-container"></div>
+            <div class="explicacion" id="explicacion" style="display:none;"></div>
+            <button class="btn btn-siguiente" id="btn-siguiente" style="display:none;" onclick="siguientePregunta()">
+                Siguiente pregunta →
+            </button>
+        </div>
+
+        <a href="/usuario/{{ perfil.id }}" class="volver">← Volver a los juegos</a>
+    </div>
+
+    <!-- Resultado -->
+    <div id="estado-resultado" style="display:none; width:100%; max-width:600px; padding: 0 24px;">
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 64px; margin-bottom: 16px;" id="resultado-emoji">🏆</div>
+            <h1 style="color: #5d4037;">¡Fin del Trivial!</h1>
+            <div class="resultado-puntos" id="resultado-puntos"></div>
+            <div style="background: #fdf6f0; border: 2px solid #c8956c; border-radius: 16px; padding: 20px; margin-bottom: 24px; font-size: 18px; color: #5d4037;" id="resultado-mensaje"></div>
+            <button class="btn btn-principal" onclick="reiniciar()">🔄 Jugar otra vez</button>
+            <a href="/usuario/{{ perfil.id }}" class="volver">← Volver a los juegos</a>
+        </div>
+    </div>
+
+    <script>
+        const perfilId = {{ perfil.id }};
+        let preguntas = [];
+        let indice = 0;
+        let puntos = 0;
+        let respondido = false;
+
+        async function cargarPreguntas() {
+            try {
+                const res = await fetch('/trivial/generar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ perfil_id: perfilId })
+                });
+                const datos = await res.json();
+                preguntas = datos.preguntas;
+
+                document.getElementById('estado-cargando').style.display = 'none';
+                document.getElementById('estado-juego').style.display = 'block';
+
+                mostrarPregunta();
+            } catch (e) {
+                document.getElementById('estado-cargando').innerHTML = '❌ Error al generar el trivial. <a href="/usuario/' + perfilId + '">Volver</a>';
+            }
+        }
+
+        function mostrarPregunta() {
+            respondido = false;
+            const p = preguntas[indice];
+
+            document.getElementById('marcador-pregunta').textContent = `Pregunta ${indice + 1} de ${preguntas.length}`;
+            document.getElementById('marcador-puntos').textContent = `Puntos: ${puntos}`;
+            document.getElementById('progreso-fill').style.width = `${(indice / preguntas.length) * 100}%`;
+            document.getElementById('pregunta-texto').textContent = p.pregunta;
+            document.getElementById('explicacion').style.display = 'none';
+            document.getElementById('btn-siguiente').style.display = 'none';
+
+            const container = document.getElementById('opciones-container');
+            container.innerHTML = '';
+
+            p.opciones.forEach((opcion, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'opcion';
+                btn.textContent = opcion;
+                btn.onclick = () => responder(i);
+                container.appendChild(btn);
+            });
+        }
+
+        function responder(idx) {
+            if (respondido) return;
+            respondido = true;
+
+            const p = preguntas[indice];
+            const botones = document.querySelectorAll('.opcion');
+
+            botones.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === p.correcta) btn.classList.add('correcta');
+                else if (i === idx && idx !== p.correcta) btn.classList.add('incorrecta');
+            });
+
+            if (idx === p.correcta) puntos++;
+
+            document.getElementById('marcador-puntos').textContent = `Puntos: ${puntos}`;
+            document.getElementById('explicacion').textContent = '💡 ' + p.explicacion;
+            document.getElementById('explicacion').style.display = 'block';
+            document.getElementById('btn-siguiente').style.display = 'block';
+
+            if (indice === preguntas.length - 1) {
+                document.getElementById('btn-siguiente').textContent = '🏆 Ver resultados';
+            }
+        }
+
+        function siguientePregunta() {
+            indice++;
+            if (indice < preguntas.length) {
+                mostrarPregunta();
+            } else {
+                mostrarResultado();
+            }
+        }
+
+        async function mostrarResultado() {
+            document.getElementById('estado-juego').style.display = 'none';
+            document.getElementById('estado-resultado').style.display = 'block';
+
+            const total = preguntas.length;
+            const pct = Math.round((puntos / total) * 100);
+
+            document.getElementById('resultado-emoji').textContent = pct >= 80 ? '🏆' : pct >= 60 ? '⭐' : '💪';
+            document.getElementById('resultado-puntos').textContent = `${puntos} / ${total}`;
+            document.getElementById('resultado-mensaje').textContent = pct >= 80
+                ? '¡Excelente memoria! Recuerdas tu historia a la perfección. 🌟'
+                : pct >= 60
+                ? '¡Muy bien! Tu memoria está en gran forma. 👍'
+                : '¡Buen esfuerzo! Sigue practicando cada día. 💪';
+
+            await fetch('/trivial/resultado', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ perfil_id: perfilId, correctas: puntos, total: total })
+            });
+        }
+
+        function reiniciar() {
+            indice = 0;
+            puntos = 0;
+            preguntas = [];
+            document.getElementById('estado-resultado').style.display = 'none';
+            document.getElementById('estado-cargando').style.display = 'block';
+            cargarPreguntas();
+        }
+
+        cargarPreguntas();
+    </script>
+
+</body>
+</html>

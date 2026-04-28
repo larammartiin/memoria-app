@@ -517,3 +517,172 @@ def ahorcado_resultado():
     db.session.commit()
 
     return jsonify({'ok': True})
+
+@juego.route('/trivial/<int:perfil_id>')
+@login_required
+def trivial(perfil_id):
+    p = PerfilMayor.query.get_or_404(perfil_id)
+    return render_template('trivial.html', perfil=p)
+
+
+@juego.route('/trivial/generar', methods=['POST'])
+@login_required
+def trivial_generar():
+    perfil_id = request.json.get('perfil_id')
+    p = PerfilMayor.query.get_or_404(perfil_id)
+
+    cliente = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+    datos = f"""
+    Nombre: {p.nombre}, Edad: {p.edad}, Ciudad natal: {p.ciudad_natal},
+    Pareja: {p.nombre_pareja}, Hijos: {p.nombres_hijos}, Nietos: {p.nombres_nietos},
+    Mejor amigo/a: {p.nombre_mejor_amigo}, Lugar de veraneo: {p.lugar_veraneo},
+    Viajes: {p.viajes_favoritos}, Aficiones: {p.aficiones},
+    Comida favorita: {p.comida_favorita}, Película favorita: {p.pelicula_favorita},
+    Mascota: {p.nombre_mascota}, Info adicional: {p.informacion_adicional}
+    """
+
+    respuesta = cliente.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": "Eres un experto en estimulación cognitiva para personas mayores. Responde ÚNICAMENTE con JSON válido, sin texto extra ni backticks."
+            },
+            {
+                "role": "user",
+                "content": f"""Basándote en estos datos biográficos: {datos}
+
+Genera 5 preguntas de trivial personalizadas con 3 opciones cada una.
+Las preguntas deben ser sobre la vida real de esta persona usando sus datos biográficos.
+Deben ser cálidas, afectuosas y apropiadas para personas mayores.
+
+Responde ÚNICAMENTE con este JSON exacto:
+[
+    {{
+        "pregunta": "texto de la pregunta",
+        "opciones": ["opción A", "opción B", "opción C"],
+        "correcta": 0,
+        "explicacion": "explicación breve y cariñosa"
+    }}
+]"""
+            }
+        ],
+        max_tokens=800,
+        temperature=0.7,
+        response_format={"type": "json_object"}
+    )
+
+    contenido = respuesta.choices[0].message.content
+    datos_json = json.loads(contenido)
+    if isinstance(datos_json, dict):
+        preguntas = list(datos_json.values())[0]
+    else:
+        preguntas = datos_json
+
+    return jsonify({'preguntas': preguntas})
+
+
+@juego.route('/trivial/resultado', methods=['POST'])
+@login_required
+def trivial_resultado():
+    datos = request.json
+    perfil_id = datos.get('perfil_id')
+    correctas = datos.get('correctas', 0)
+    total = datos.get('total', 5)
+
+    nueva_sesion = Sesion(
+        perfil_id=perfil_id,
+        total_preguntas=total,
+        respuestas_correctas=correctas,
+        respuestas_incorrectas=total - correctas,
+        preguntas_pasadas=0,
+        tipo_juego='trivial'
+    )
+    db.session.add(nueva_sesion)
+    db.session.commit()
+
+    return jsonify({'ok': True})
+
+
+@juego.route('/intruso/<int:perfil_id>')
+@login_required
+def intruso(perfil_id):
+    p = PerfilMayor.query.get_or_404(perfil_id)
+    return render_template('intruso.html', perfil=p)
+
+
+@juego.route('/intruso/generar', methods=['POST'])
+@login_required
+def intruso_generar():
+    perfil_id = request.json.get('perfil_id')
+    p = PerfilMayor.query.get_or_404(perfil_id)
+
+    cliente = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+    datos = f"""
+    Nombre: {p.nombre}, Edad: {p.edad}, Ciudad natal: {p.ciudad_natal},
+    Pareja: {p.nombre_pareja}, Hijos: {p.nombres_hijos}, Nietos: {p.nombres_nietos},
+    Mejor amigo/a: {p.nombre_mejor_amigo}, Lugar de veraneo: {p.lugar_veraneo},
+    Viajes: {p.viajes_favoritos}, Aficiones: {p.aficiones},
+    Comida favorita: {p.comida_favorita}, Película favorita: {p.pelicula_favorita},
+    Mascota: {p.nombre_mascota}, Info adicional: {p.informacion_adicional}
+    """
+
+    respuesta = cliente.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": "Eres un experto en estimulación cognitiva para personas mayores. Responde ÚNICAMENTE con JSON válido, sin texto extra ni backticks."
+            },
+            {
+                "role": "user",
+                "content": f"""Basándote en estos datos biográficos: {datos}
+
+Genera 4 rondas del juego "Encuentra al intruso".
+Cada ronda tiene un tema relacionado con la vida de esta persona.
+Genera 3 elementos reales de su vida y 1 intruso que no pertenezca.
+
+Responde ÚNICAMENTE con este JSON exacto:
+{{
+    "rondas": [
+        {{
+            "tema": "tema de la ronda",
+            "elementos": ["elemento1", "elemento2", "elemento3", "intruso"],
+            "intruso": "intruso",
+            "refuerzo": "explicación cariñosa de por qué el intruso no encaja"
+        }}
+    ]
+}}"""
+            }
+        ],
+        max_tokens=600,
+        temperature=0.7,
+        response_format={"type": "json_object"}
+    )
+
+    datos_json = json.loads(respuesta.choices[0].message.content)
+    return jsonify(datos_json)
+
+
+@juego.route('/intruso/resultado', methods=['POST'])
+@login_required
+def intruso_resultado():
+    datos = request.json
+    perfil_id = datos.get('perfil_id')
+    correctas = datos.get('correctas', 0)
+    total = datos.get('total', 4)
+
+    nueva_sesion = Sesion(
+        perfil_id=perfil_id,
+        total_preguntas=total,
+        respuestas_correctas=correctas,
+        respuestas_incorrectas=total - correctas,
+        preguntas_pasadas=0,
+        tipo_juego='intruso'
+    )
+    db.session.add(nueva_sesion)
+    db.session.commit()
+
+    return jsonify({'ok': True})

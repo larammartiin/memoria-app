@@ -11,7 +11,7 @@
                 Evolución y progreso de las sesiones
             </p>
         </div>
-        <a href="/inicio" class="btn btn-primary">← Volver</a>
+        <a href="/responsable/{{ perfil.id }}" class="btn btn-primary">← Volver</a>
     </div>
 </div>
 
@@ -124,7 +124,11 @@
                 {% set pct = (s.respuestas_correctas / s.total_preguntas * 100) | int if s.total_preguntas > 0 else 0 %}
                 <tr style="border-bottom: 1px solid #f0e6dc;">
                     <td style="padding: 12px;">{{ s.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
-                    <td style="padding: 12px; text-align: center;">🎮 Rosco</td>
+                    <td style="padding: 12px; text-align: center;">
+                        {% if s.tipo_juego == 'trivial' %}🎯 Trivial
+                        {% elif s.tipo_juego == 'intruso' %}🕵️ Intruso
+                        {% else %}🎮 Rosco{% endif %}
+                    </td>
                     <td style="padding: 12px; text-align: center; color: #81b88b; font-weight: bold;">{{ s.respuestas_correctas }}</td>
                     <td style="padding: 12px; text-align: center; color: #e07070; font-weight: bold;">{{ s.respuestas_incorrectas }}</td>
                     <td style="padding: 12px; text-align: center; color: #e6a817; font-weight: bold;">{{ s.preguntas_pasadas }}</td>
@@ -162,6 +166,7 @@
                     </td>
                 </tr>
                 {% endfor %}
+            </tbody>
         </table>
     </div>
     {% else %}

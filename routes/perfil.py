@@ -105,7 +105,7 @@ def historial(perfil_id):
         s.fecha = s.fecha + zona_espana
 
     # Separar sesiones por tipo
-    sesiones_rosco = [s for s in sesiones if s.tipo_juego == 'rosco']
+    sesiones_rosco = [s for s in sesiones if s.tipo_juego in ('rosco', 'trivial', 'intruso')]
     sesiones_ahorcado = [s for s in sesiones if s.tipo_juego == 'ahorcado']
 
     # Agrupar ahorcado por día
