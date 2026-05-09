@@ -1,0 +1,11 @@
+import psycopg2
+conn = psycopg2.connect('postgresql://postgres:FqbmjvljtWyadkQkejqyBURNPFJneypq@shinkansen.proxy.rlwy.net:58327/railway')
+cur = conn.cursor()
+cur.execute('ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS pregunta_seguridad VARCHAR(200)')
+cur.execute('ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS respuesta_seguridad VARCHAR(200)')
+cur.execute('ALTER TABLE perfiles_mayores ADD COLUMN IF NOT EXISTS profesion VARCHAR(200)')
+cur.execute('ALTER TABLE perfiles_mayores ADD COLUMN IF NOT EXISTS genero VARCHAR(10)')
+conn.commit()
+cur.close()
+conn.close()
+print('Listo')
