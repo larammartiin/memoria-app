@@ -48,6 +48,20 @@ Veo el problema — el campo profesión está fuera de una card. Abre `templates
             value="{{ perfil.ciudad_natal if perfil else '' }}"
         >
 
+        <label>👤 Género</label>
+        <div style="display: flex; gap: 16px; margin-top: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                <input type="radio" name="genero" value="sr"
+                    {{ 'checked' if perfil and perfil.genero == 'sr' else '' }}>
+                🧓 Sr. (hombre)
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                <input type="radio" name="genero" value="sra"
+                    {{ 'checked' if perfil and perfil.genero == 'sra' else '' }}>
+                👵 Sra. (mujer)
+            </label>
+        </div>
+
         <label>💼 Profesión o trabajo anterior</label>
         <input
             type="text"

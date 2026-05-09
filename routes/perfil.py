@@ -68,6 +68,7 @@ def editar_perfil(perfil_id):
         p.nombre_mascota = request.form.get('nombre_mascota')
         p.tipo_mascota = request.form.get('tipo_mascota')
         p.profesion = request.form.get('profesion', '')
+        p.genero = request.form.get('genero', '')
         p.informacion_adicional = request.form.get('informacion_adicional')
 
         db.session.commit()

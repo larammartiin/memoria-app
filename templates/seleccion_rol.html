@@ -45,8 +45,12 @@
                 text-decoration: none;
                 display: block;
             ">
-                <div style="font-size: 48px; margin-bottom: 12px;">👴</div>
-                <div style="font-size: 20px; font-weight: bold; color: white; margin-bottom: 8px;">{{ perfil.nombre }}</div>
+                <div style="font-size: 48px; margin-bottom: 12px;">
+                    {{ '👵' if perfil.genero == 'sra' else '🧓' }}
+                </div>
+                <div style="font-size: 20px; font-weight: bold; color: white; margin-bottom: 8px;">
+                    {{ 'Sra.' if perfil.genero == 'sra' else 'Sr.' }} {{ perfil.nombre }}
+                </div>
                 <div style="font-size: 15px; color: #f0e6dc;">Jugar directamente</div>
             </a>
 
