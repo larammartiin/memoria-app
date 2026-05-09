@@ -20,7 +20,7 @@ def nuevo_perfil():
         nuevo = PerfilMayor(
             familiar_id=current_user.id,
             nombre=request.form.get('nombre'),
-            edad=request.form.get('edad'),
+            edad=int(request.form.get('edad')) if request.form.get('edad') else None,
             ciudad_natal=request.form.get('ciudad_natal'),
             nombre_pareja=request.form.get('nombre_pareja'),
             nombres_hijos=request.form.get('nombres_hijos'),
@@ -53,7 +53,7 @@ def editar_perfil(perfil_id):
 
     if request.method == 'POST':
         p.nombre = request.form.get('nombre')
-        p.edad = request.form.get('edad')
+        p.edad = int(request.form.get('edad')) if request.form.get('edad') else None
         p.ciudad_natal = request.form.get('ciudad_natal')
         p.nombre_pareja = request.form.get('nombre_pareja')
         p.nombres_hijos = request.form.get('nombres_hijos')
