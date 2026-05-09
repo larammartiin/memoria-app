@@ -1,3 +1,6 @@
+Veo el problema — el campo profesión está fuera de una card. Abre `templates/perfil_form.html`, **borra todo** y pega esto:
+
+```html
 {% extends "base.html" %}
 
 {% block content %}
@@ -43,6 +46,14 @@
             name="ciudad_natal"
             placeholder="Sevilla"
             value="{{ perfil.ciudad_natal if perfil else '' }}"
+        >
+
+        <label>💼 Profesión o trabajo anterior</label>
+        <input
+            type="text"
+            name="profesion"
+            placeholder="Ej: maestra, enfermera, ama de casa..."
+            value="{{ perfil.profesion if perfil else '' }}"
         >
     </div>
 
@@ -183,3 +194,4 @@
 </form>
 
 {% endblock %}
+
