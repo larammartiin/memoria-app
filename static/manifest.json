@@ -1,11 +1,11 @@
 {
-    "name": "MemorIA",
-    "short_name": "MemorIA",
+    "name": "Hilos de Oro",
+    "short_name": "Hilos de Oro",
     "description": "Ejercicios de memoria personalizados",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#F8F9FA",
-    "theme_color": "#4A90D9",
+    "background_color": "#fdfaf6",
+    "theme_color": "#8d6e63",
     "orientation": "portrait",
     "icons": [
         {
