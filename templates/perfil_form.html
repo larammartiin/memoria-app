@@ -1,6 +1,3 @@
-Veo el problema — el campo profesión está fuera de una card. Abre `templates/perfil_form.html`, **borra todo** y pega esto:
-
-```html
 {% extends "base.html" %}
 
 {% block content %}
@@ -49,7 +46,7 @@ Veo el problema — el campo profesión está fuera de una card. Abre `templates
         >
 
         <label>👤 Género</label>
-        <div style="display: flex; gap: 16px; margin-top: 8px;">
+        <div style="display: flex; gap: 16px; margin-top: 8px; margin-bottom: 16px;">
             <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
                 <input type="radio" name="genero" value="sr"
                     {{ 'checked' if perfil and perfil.genero == 'sr' else '' }}>
@@ -208,4 +205,3 @@ Veo el problema — el campo profesión está fuera de una card. Abre `templates
 </form>
 
 {% endblock %}
-
