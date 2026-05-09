@@ -40,6 +40,24 @@
                 required
             >
 
+            <label>🔒 Pregunta de seguridad</label>
+        <select name="pregunta_seguridad" required>
+            <option value="">Selecciona una pregunta...</option>
+            <option value="¿Cómo se llamaba tu primera mascota?">¿Cómo se llamaba tu primera mascota?</option>
+            <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
+            <option value="¿Cuál es el nombre de tu madre?">¿Cuál es el nombre de tu madre?</option>
+            <option value="¿Cuál era tu asignatura favorita?">¿Cuál era tu asignatura favorita?</option>
+            <option value="¿Cómo se llamaba tu mejor amigo de infancia?">¿Cómo se llamaba tu mejor amigo de infancia?</option>
+        </select>
+
+        <label>✏️ Tu respuesta</label>
+        <input
+            type="text"
+            name="respuesta_seguridad"
+            placeholder="Escribe tu respuesta..."
+            required
+        >
+        
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
                 Crear cuenta
             </button>

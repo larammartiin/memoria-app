@@ -14,6 +14,8 @@ class Usuario(UserMixin, db.Model):
     nombre = db.Column(db.String(100), nullable=False)
     rol = db.Column(db.String(20), default='familiar')
     creado_en = db.Column(db.DateTime, default=datetime.utcnow)
+    pregunta_seguridad = db.Column(db.String(200))
+    respuesta_seguridad = db.Column(db.String(200))
     
     perfiles = db.relationship('PerfilMayor', backref='familiar', lazy=True)
 
@@ -45,6 +47,7 @@ class PerfilMayor(db.Model):
     nombre_mascota = db.Column(db.String(100))
     tipo_mascota = db.Column(db.String(100))
     profesion = db.Column(db.String(200))
+    genero = db.Column(db.String(10))
     informacion_adicional = db.Column(db.Text)
     creado_en = db.Column(db.DateTime, default=datetime.utcnow)
     actualizado_en = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

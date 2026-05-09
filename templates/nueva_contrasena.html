@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="max-width: 480px; margin: 60px auto;">
+    <div class="card text-center">
+        <div style="font-size: 64px; margin-bottom: 16px;">✅</div>
+        <h1>Nueva contraseña</h1>
+        <p style="color: #8d6e63; margin-top: 8px;">
+            Elige una nueva contraseña para tu cuenta.
+        </p>
+    </div>
+
+    {% if error %}
+    <div class="card" style="background: #fff0f0; border: 2px solid #e07070;">
+        <p style="color: #e07070; text-align: center;">{{ error }}</p>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <form method="POST">
+            <input type="hidden" name="email" value="{{ email }}">
+            <label>🔑 Nueva contraseña</label>
+            <input type="password" name="nueva_contrasena" placeholder="Mínimo 6 caracteres" required>
+            <label>🔑 Confirmar contraseña</label>
+            <input type="password" name="confirmar_contrasena" placeholder="Repite la contraseña" required>
+            <button type="submit" class="btn btn-success mt-16" style="width: 100%;">
+                💾 Guardar nueva contraseña
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

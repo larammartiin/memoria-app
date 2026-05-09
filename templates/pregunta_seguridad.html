@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="max-width: 480px; margin: 60px auto;">
+    <div class="card text-center">
+        <div style="font-size: 64px; margin-bottom: 16px;">🔒</div>
+        <h1>Pregunta de seguridad</h1>
+        <p style="color: #8d6e63; margin-top: 8px;">
+            Responde correctamente para recuperar tu contraseña.
+        </p>
+    </div>
+
+    {% if error %}
+    <div class="card" style="background: #fff0f0; border: 2px solid #e07070;">
+        <p style="color: #e07070; text-align: center;">{{ error }}</p>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <form method="POST">
+            <input type="hidden" name="email" value="{{ email }}">
+            <label>❓ {{ pregunta }}</label>
+            <input type="text" name="respuesta" placeholder="Tu respuesta..." required>
+            <button type="submit" class="btn btn-primary mt-16" style="width: 100%;">
+                Verificar →
+            </button>
+        </form>
+        <div class="text-center" style="margin-top: 16px;">
+            <a href="/login" style="color: #8d6e63;">← Volver al login</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
